@@ -38,7 +38,7 @@ struct MainTabView: View {
                     Label("Notifications", systemImage: "bell.fill")
                 }
         }
-        .tint(Theme.accent)
+        .tint(Theme.goldColor)
     }
 }
 

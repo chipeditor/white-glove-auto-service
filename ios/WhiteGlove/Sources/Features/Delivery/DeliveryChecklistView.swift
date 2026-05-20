@@ -112,6 +112,6 @@ extension MockChecklistItem {
 
 #Preview {
     NavigationStack {
-        DeliveryChecklistView(vehicle: Vehicle.mockList[1])
+        DeliveryChecklistView(vehicle: MockDataProvider.shared.vehicles[1])
     }
 }

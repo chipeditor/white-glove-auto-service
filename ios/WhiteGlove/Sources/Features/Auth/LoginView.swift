@@ -7,7 +7,7 @@ struct LoginView: View {
 
     private let bgColor = Color(hex: Theme.background)
     private let cardColor = Color(hex: Theme.card)
-    private let accentColor = Color(hex: Theme.accent)
+    private let goldColor = Color(hex: Theme.gold)
     private let alertColor = Color(hex: Theme.alert)
 
     var body: some View {
@@ -19,11 +19,11 @@ struct LoginView: View {
 
                 // Branding
                 VStack(spacing: 16) {
-                    Image(systemName: "car.top.radiowaves.front.fill")
+                    Image(systemName: "shield.checkered")
                         .font(.system(size: 64))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [accentColor, .white.opacity(0.8)],
+                                colors: [goldColor, goldColor.opacity(0.7)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -32,12 +32,12 @@ struct LoginView: View {
                     Text("WHITE GLOVE")
                         .font(.system(size: 32, weight: .bold, design: .default))
                         .tracking(6)
-                        .foregroundColor(.white)
+                        .foregroundColor(goldColor)
 
-                    Text("Auto Service")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white.opacity(0.6))
-                        .tracking(4)
+                    Text("AUTO SERVICE")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(goldColor.opacity(0.6))
+                        .tracking(6)
                 }
 
                 // Login Form
@@ -88,7 +88,7 @@ struct LoginView: View {
                         Group {
                             if authService.isLoading {
                                 ProgressView()
-                                    .tint(.white)
+                                    .tint(Color(hex: Theme.background))
                             } else {
                                 Text("Sign In")
                                     .font(.headline)
@@ -96,18 +96,16 @@ struct LoginView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(
-                            LinearGradient(
-                                colors: [accentColor, accentColor.opacity(0.7)],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .foregroundColor(.white)
+                        .background(goldColor)
+                        .foregroundColor(Color(hex: Theme.background))
                         .cornerRadius(12)
                     }
                     .disabled(email.isEmpty || password.isEmpty || authService.isLoading)
                     .opacity(email.isEmpty || password.isEmpty ? 0.5 : 1.0)
+
+                    Text("Demo: john@whiteglove.com / password")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.4))
                 }
                 .padding(.horizontal, 32)
 
@@ -142,9 +140,19 @@ extension Color {
 
 extension Theme {
     static let bgColor = Color(hex: background)
+    static let bg2Color = Color(hex: background2)
     static let cardColor = Color(hex: card)
+    static let cardHoverColor = Color(hex: cardHover)
+    static let borderColor = Color(hex: border)
+    static let goldColor = Color(hex: gold)
+    static let goldHoverColor = Color(hex: goldHover)
     static let accentColor = Color(hex: accent)
+    static let blueColor = Color(hex: blue)
     static let alertColor = Color(hex: alert)
+    static let greenColor = Color(hex: green)
+    static let textColor = Color(hex: text)
+    static let text2Color = Color(hex: text2)
+    static let mutedColor = Color(hex: muted)
 }
 
 #Preview {

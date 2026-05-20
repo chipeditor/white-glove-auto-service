@@ -55,9 +55,9 @@ struct VehicleDetailView: View {
                             VStack(spacing: 8) {
                                 Text(tab)
                                     .font(.subheadline.weight(selectedTab == index ? .semibold : .regular))
-                                    .foregroundColor(selectedTab == index ? .white : .secondary)
+                                    .foregroundColor(selectedTab == index ? Theme.textColor : Theme.text2Color)
                                 Rectangle()
-                                    .fill(selectedTab == index ? Theme.accentColor : .clear)
+                                    .fill(selectedTab == index ? Theme.goldColor : .clear)
                                     .frame(height: 2)
                             }
                             .padding(.horizontal, 16)
@@ -185,6 +185,6 @@ private struct HistoryTab: View {
 
 #Preview {
     NavigationStack {
-        VehicleDetailView(vehicle: Vehicle.mockList[0])
+        VehicleDetailView(vehicle: MockDataProvider.shared.vehicles[0])
     }
 }

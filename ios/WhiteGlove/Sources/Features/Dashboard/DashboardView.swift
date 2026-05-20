@@ -2,14 +2,20 @@ import SwiftUI
 
 struct DashboardView: View {
     @EnvironmentObject var authService: AuthService
+    @State private var vehicles: [Vehicle] = []
+    @State private var isLoading = true
 
-    // Mock data for scaffold
-    private let stats: [(title: String, value: String, icon: String, color: Color)] = [
-        ("In Service", "12", "wrench.and.screwdriver.fill", Theme.accentColor),
-        ("Ready", "5", "checkmark.circle.fill", .green),
-        ("Awaiting", "3", "clock.fill", .orange),
-        ("This Week", "8", "calendar.badge.checkmark", Theme.accentColor),
-    ]
+    private var stats: [(title: String, value: String, icon: String, color: Color)] {
+        let inService = vehicles.filter { $0.status == .inService }.count
+        let ready = vehicles.filter { $0.status == .readyForDelivery }.count
+        let awaiting = vehicles.filter { $0.status == .awaitingApproval }.count
+        return [
+            ("In Service", "\(inService)", "wrench.and.screwdriver.fill", Theme.blueColor),
+            ("Ready", "\(ready)", "checkmark.circle.fill", Theme.greenColor),
+            ("Awaiting", "\(awaiting)", "clock.fill", .orange),
+            ("Total", "\(vehicles.count)", "car.fill", Theme.goldColor),
+        ]
+    }
 
     var body: some View {
         NavigationStack {
@@ -20,22 +26,23 @@ struct DashboardView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Welcome back,")
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Theme.text2Color)
                             Text(authService.currentUser?.fullName ?? "Team")
                                 .font(.title2.bold())
+                                .foregroundColor(Theme.textColor)
                         }
                         Spacer()
                         Image(systemName: "person.circle.fill")
                             .font(.title)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Theme.goldColor)
                     }
                     .padding(.horizontal)
 
                     // Stat Cards
                     LazyVGrid(columns: [
-                        GridItem(.flexible(), spacing: 16),
-                        GridItem(.flexible(), spacing: 16),
-                    ], spacing: 16) {
+                        GridItem(.flexible(), spacing: 12),
+                        GridItem(.flexible(), spacing: 12),
+                    ], spacing: 12) {
                         ForEach(Array(stats.enumerated()), id: \.offset) { _, stat in
                             StatCard(
                                 title: stat.title,
@@ -52,26 +59,32 @@ struct DashboardView: View {
                         HStack {
                             Text("Recent Vehicles")
                                 .font(.headline)
+                                .foregroundColor(Theme.textColor)
                             Spacer()
                             NavigationLink {
                                 VehicleListView()
                             } label: {
                                 Text("See All")
                                     .font(.subheadline)
-                                    .foregroundColor(Theme.accentColor)
+                                    .foregroundColor(Theme.goldColor)
                             }
                         }
                         .padding(.horizontal)
 
-                        ForEach(Vehicle.mockList) { vehicle in
-                            NavigationLink {
-                                VehicleDetailView(vehicle: vehicle)
-                            } label: {
-                                VehicleCard(vehicle: vehicle)
+                        if isLoading {
+                            LoadingView()
+                                .frame(height: 200)
+                        } else {
+                            ForEach(vehicles.prefix(5)) { vehicle in
+                                NavigationLink {
+                                    VehicleDetailView(vehicle: vehicle)
+                                } label: {
+                                    VehicleCard(vehicle: vehicle)
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
+                            .padding(.horizontal)
                         }
-                        .padding(.horizontal)
                     }
                 }
                 .padding(.vertical)
@@ -84,9 +97,25 @@ struct DashboardView: View {
                         Task { await authService.signOut() }
                     } label: {
                         Image(systemName: "rectangle.portrait.and.arrow.right")
+                            .foregroundColor(Theme.text2Color)
                     }
                 }
             }
+            .task {
+                await loadVehicles()
+            }
+        }
+    }
+
+    private func loadVehicles() async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            vehicles = try await authService.dataProvider.fetchVehicles(
+                organizationId: authService.organizationId
+            )
+        } catch {
+            vehicles = []
         }
     }
 }
@@ -109,42 +138,19 @@ private struct StatCard: View {
             }
             Text(value)
                 .font(.system(size: 28, weight: .bold, design: .rounded))
+                .foregroundColor(Theme.textColor)
             Text(title)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(Theme.text2Color)
         }
         .padding()
         .background(Theme.cardColor)
         .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Theme.borderColor, lineWidth: 1)
+        )
     }
-}
-
-// MARK: - Mock Data
-
-extension Vehicle {
-    static let mockList: [Vehicle] = [
-        Vehicle(
-            id: UUID(), organizationId: UUID(), customerId: UUID(),
-            vin: "1HGBH41JXMN109186", year: 2024, make: "Mercedes-Benz", model: "S 580",
-            color: "Black", licensePlate: "WG-001", mileage: 12500,
-            status: .inService, notes: nil,
-            createdAt: Date(), updatedAt: Date()
-        ),
-        Vehicle(
-            id: UUID(), organizationId: UUID(), customerId: UUID(),
-            vin: "5YJSA1E26MF123456", year: 2023, make: "BMW", model: "750i",
-            color: "Alpine White", licensePlate: "WG-002", mileage: 8300,
-            status: .readyForDelivery, notes: nil,
-            createdAt: Date(), updatedAt: Date()
-        ),
-        Vehicle(
-            id: UUID(), organizationId: UUID(), customerId: UUID(),
-            vin: "WAUZZZ8V8KA012345", year: 2024, make: "Porsche", model: "Cayenne",
-            color: "Meteor Grey", licensePlate: "WG-003", mileage: 3100,
-            status: .awaitingApproval, notes: nil,
-            createdAt: Date(), updatedAt: Date()
-        ),
-    ]
 }
 
 #Preview {

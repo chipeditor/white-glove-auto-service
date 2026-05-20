@@ -9,9 +9,9 @@ struct VehicleCard: View {
                 // Vehicle Icon
                 Image(systemName: "car.fill")
                     .font(.title2)
-                    .foregroundColor(Theme.accentColor)
+                    .foregroundColor(Theme.goldColor)
                     .frame(width: 44, height: 44)
-                    .background(Theme.accentColor.opacity(0.15))
+                    .background(Theme.goldColor.opacity(0.12))
                     .cornerRadius(10)
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -59,11 +59,15 @@ struct VehicleCard: View {
         .padding()
         .background(Theme.cardColor)
         .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Theme.borderColor, lineWidth: 1)
+        )
     }
 }
 
 #Preview {
-    VehicleCard(vehicle: Vehicle.mockList[0])
+    VehicleCard(vehicle: MockDataProvider.shared.vehicles[0])
         .padding()
         .background(Theme.bgColor)
 }

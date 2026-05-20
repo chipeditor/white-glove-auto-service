@@ -4,13 +4,7 @@ struct StatusBadge: View {
     let status: VehicleStatus
 
     private var color: Color {
-        switch status {
-        case .intake: return .blue
-        case .inService: return .orange
-        case .readyForDelivery: return .green
-        case .delivered: return .secondary
-        case .awaitingApproval: return .yellow
-        }
+        Color(hex: status.statusColor)
     }
 
     var body: some View {
@@ -32,10 +26,10 @@ struct ServiceStatusBadge: View {
     private var color: Color {
         switch status {
         case .pending: return .orange
-        case .approved: return .blue
-        case .inProgress: return Theme.accentColor
-        case .completed: return .green
-        case .cancelled: return .secondary
+        case .approved: return Theme.blueColor
+        case .inProgress: return Theme.blueColor
+        case .completed: return Theme.greenColor
+        case .cancelled: return Theme.mutedColor
         }
     }
 

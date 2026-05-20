@@ -1,30 +1,61 @@
 import Foundation
 
-// MARK: - Theme
+// MARK: - Theme (matches web globals.css)
 
 enum Theme {
-    static let background = "#1a1a2e"
-    static let card = "#16213e"
-    static let accent = "#0f3460"
+    // Core palette
+    static let background = "#0d0d14"
+    static let background2 = "#111122"
+    static let card = "#1a1a2e"
+    static let cardHover = "#22223a"
+    static let border = "#2a2a40"
+
+    // Brand
+    static let gold = "#c8a45c"
+    static let goldHover = "#b8944c"
+
+    // Accents
+    static let accent = "#4a90d9"
+    static let blue = "#4a90d9"
     static let alert = "#e94560"
+    static let red = "#e94560"
+    static let green = "#34d399"
+
+    // Text
+    static let text = "#e8e8f0"
+    static let text2 = "#9898b0"
+    static let muted = "#6a6a82"
 }
 
 // MARK: - Enums
 
 enum VehicleStatus: String, Codable, Sendable, CaseIterable {
     case intake = "intake"
+    case intakeCompleted = "intake_completed"
+    case awaitingApproval = "awaiting_approval"
     case inService = "in_service"
     case readyForDelivery = "ready_for_delivery"
     case delivered = "delivered"
-    case awaitingApproval = "awaiting_approval"
 
     var displayName: String {
         switch self {
         case .intake: return "Intake"
+        case .intakeCompleted: return "Intake Completed"
+        case .awaitingApproval: return "Awaiting Approval"
         case .inService: return "In Service"
         case .readyForDelivery: return "Ready for Delivery"
         case .delivered: return "Delivered"
-        case .awaitingApproval: return "Awaiting Approval"
+        }
+    }
+
+    var statusColor: String {
+        switch self {
+        case .intake: return Theme.text2
+        case .intakeCompleted: return Theme.blue
+        case .awaitingApproval: return "#f59e0b"
+        case .inService: return Theme.blue
+        case .readyForDelivery: return Theme.green
+        case .delivered: return Theme.green
         }
     }
 }

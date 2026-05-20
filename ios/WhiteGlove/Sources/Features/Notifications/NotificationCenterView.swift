@@ -1,15 +1,19 @@
 import SwiftUI
 
 struct NotificationCenterView: View {
+    @EnvironmentObject var authService: AuthService
+    @State private var notifications: [Notification] = []
     @State private var selectedTab = 0
+    @State private var isLoading = true
+
     private let tabs = ["All", "Unread", "Updates", "Alerts"]
 
-    private var filteredNotifications: [MockNotification] {
+    private var filteredNotifications: [Notification] {
         switch selectedTab {
-        case 1: return MockNotification.samples.filter { !$0.isRead }
-        case 2: return MockNotification.samples.filter { $0.type == .update || $0.type == .completion }
-        case 3: return MockNotification.samples.filter { $0.type == .alert || $0.type == .approval }
-        default: return MockNotification.samples
+        case 1: return notifications.filter { !$0.isRead }
+        case 2: return notifications.filter { $0.type == .update || $0.type == .completion }
+        case 3: return notifications.filter { $0.type == .alert || $0.type == .approval }
+        default: return notifications
         }
     }
 
@@ -25,9 +29,9 @@ struct NotificationCenterView: View {
                             VStack(spacing: 8) {
                                 Text(tab)
                                     .font(.subheadline.weight(selectedTab == index ? .semibold : .regular))
-                                    .foregroundColor(selectedTab == index ? .white : .secondary)
+                                    .foregroundColor(selectedTab == index ? Theme.textColor : Theme.text2Color)
                                 Rectangle()
-                                    .fill(selectedTab == index ? Theme.accentColor : .clear)
+                                    .fill(selectedTab == index ? Theme.goldColor : .clear)
                                     .frame(height: 2)
                             }
                             .frame(maxWidth: .infinity)
@@ -37,7 +41,9 @@ struct NotificationCenterView: View {
                 .padding(.top, 8)
                 .background(Theme.cardColor)
 
-                if filteredNotifications.isEmpty {
+                if isLoading {
+                    LoadingView()
+                } else if filteredNotifications.isEmpty {
                     EmptyStateView(
                         icon: "bell.slash.fill",
                         title: "No Notifications",
@@ -60,8 +66,23 @@ struct NotificationCenterView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Mark All Read") {}
                         .font(.caption)
+                        .foregroundColor(Theme.goldColor)
                 }
             }
+            .task {
+                await loadNotifications()
+            }
+        }
+    }
+
+    private func loadNotifications() async {
+        isLoading = true
+        defer { isLoading = false }
+        guard let userId = authService.currentUser?.id else { return }
+        do {
+            notifications = try await authService.dataProvider.fetchNotifications(userId: userId)
+        } catch {
+            notifications = []
         }
     }
 }
@@ -69,7 +90,7 @@ struct NotificationCenterView: View {
 // MARK: - Notification Row
 
 private struct NotificationRow: View {
-    let notification: MockNotification
+    let notification: Notification
 
     private var iconName: String {
         switch notification.type {
@@ -82,11 +103,15 @@ private struct NotificationRow: View {
 
     private var iconColor: Color {
         switch notification.type {
-        case .update: return Theme.accentColor
+        case .update: return Theme.blueColor
         case .alert: return Theme.alertColor
         case .approval: return .orange
-        case .completion: return .green
+        case .completion: return Theme.greenColor
         }
+    }
+
+    private var timeAgo: String {
+        notification.createdAt.formatted(.relative(presentation: .named))
     }
 
     var body: some View {
@@ -100,23 +125,23 @@ private struct NotificationRow: View {
                 HStack {
                     Text(notification.title)
                         .font(.subheadline.weight(.semibold))
-                        .foregroundColor(notification.isRead ? .secondary : .white)
+                        .foregroundColor(notification.isRead ? Theme.text2Color : Theme.textColor)
                     Spacer()
                     if !notification.isRead {
                         Circle()
-                            .fill(Theme.accentColor)
+                            .fill(Theme.goldColor)
                             .frame(width: 8, height: 8)
                     }
                 }
 
                 Text(notification.body)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Theme.text2Color)
                     .lineLimit(2)
 
-                Text(notification.timeAgo)
+                Text(timeAgo)
                     .font(.caption2)
-                    .foregroundColor(.secondary.opacity(0.7))
+                    .foregroundColor(Theme.mutedColor)
             }
         }
         .padding()
@@ -124,31 +149,12 @@ private struct NotificationRow: View {
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(notification.isRead ? .clear : Theme.accentColor.opacity(0.2), lineWidth: 1)
+                .stroke(notification.isRead ? Theme.borderColor : Theme.goldColor.opacity(0.2), lineWidth: 1)
         )
     }
 }
 
-// MARK: - Mock Data
-
-struct MockNotification: Identifiable {
-    let id = UUID()
-    let type: NotificationType
-    let title: String
-    let body: String
-    let isRead: Bool
-    let timeAgo: String
-
-    static let samples: [MockNotification] = [
-        .init(type: .approval, title: "Approval Requested", body: "2024 Mercedes S 580 service estimate requires customer approval.", isRead: false, timeAgo: "5m ago"),
-        .init(type: .alert, title: "Inspection Finding", body: "Critical brake wear detected on 2023 BMW 750i during pre-delivery inspection.", isRead: false, timeAgo: "22m ago"),
-        .init(type: .update, title: "Status Update", body: "Porsche Cayenne has been moved to Ready for Delivery.", isRead: false, timeAgo: "1h ago"),
-        .init(type: .completion, title: "Service Complete", body: "Full detail and ceramic coating completed on 2024 Range Rover.", isRead: true, timeAgo: "3h ago"),
-        .init(type: .update, title: "New Vehicle Intake", body: "2024 Audi RS7 has been checked in by Mike T.", isRead: true, timeAgo: "5h ago"),
-        .init(type: .approval, title: "Estimate Approved", body: "Customer approved $2,450 service estimate for BMW 750i.", isRead: true, timeAgo: "1d ago"),
-    ]
-}
-
 #Preview {
     NotificationCenterView()
+        .environmentObject(AuthService())
 }
