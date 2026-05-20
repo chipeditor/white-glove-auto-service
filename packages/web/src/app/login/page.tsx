@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 
@@ -11,11 +12,15 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-wg-bg px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-wg-blue/20 flex items-center justify-center mx-auto mb-4">
-            <span className="text-wg-blue font-bold text-2xl">W</span>
-          </div>
-          <h1 className="text-xl font-bold text-wg-text tracking-wide">WHITE GLOVE</h1>
-          <p className="text-xs text-wg-muted tracking-widest mt-1">AUTO SERVICE</p>
+          <Image
+            src="/logo.svg"
+            alt="White Glove Auto Service"
+            width={64}
+            height={64}
+            className="mx-auto mb-4"
+          />
+          <h1 className="text-xl font-bold text-[#c8a45c] tracking-wide">WHITE GLOVE</h1>
+          <p className="text-xs text-[#c8a45c]/60 tracking-widest mt-1">AUTO SERVICE</p>
         </div>
 
         <div className="bg-wg-card rounded-2xl border border-wg-border p-6 space-y-4">
@@ -39,9 +44,9 @@ export default function LoginPage() {
               className="w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text placeholder:text-wg-muted focus:outline-none focus:border-wg-blue/50"
             />
           </div>
-          <Button className="w-full" size="lg">
+          <button className="w-full px-5 py-2.5 rounded-lg text-sm font-semibold bg-[#c8a45c] hover:bg-[#b8944c] text-[#1a1a2e] transition-colors">
             Sign In
-          </Button>
+          </button>
           <p className="text-center text-xs text-wg-muted">
             Demo: john@whiteglove.com / password
           </p>

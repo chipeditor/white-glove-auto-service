@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
@@ -38,12 +39,16 @@ export function Sidebar() {
     <aside className="fixed left-0 top-0 bottom-0 w-[260px] bg-wg-bg2 border-r border-wg-border flex flex-col z-40">
       <div className="p-6 pb-4">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-wg-blue/20 flex items-center justify-center">
-            <span className="text-wg-blue font-bold text-lg">W</span>
-          </div>
+          <Image
+            src="/logo.svg"
+            alt="White Glove Auto Service"
+            width={40}
+            height={40}
+            className="rounded-lg"
+          />
           <div>
-            <div className="text-sm font-bold text-wg-text tracking-wide">WHITE GLOVE</div>
-            <div className="text-xs text-wg-muted tracking-wider">AUTO SERVICE</div>
+            <div className="text-sm font-bold text-[#c8a45c] tracking-wide">WHITE GLOVE</div>
+            <div className="text-xs text-[#c8a45c]/60 tracking-wider">AUTO SERVICE</div>
           </div>
         </Link>
       </div>
