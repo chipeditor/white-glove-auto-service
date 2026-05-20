@@ -2,7 +2,7 @@
 
 import { Check, Circle } from 'lucide-react';
 import { clsx } from 'clsx';
-import type { ChecklistItem } from '@white-glove/shared/types';
+import type { ChecklistItem } from '@/shared/types';
 
 interface ChecklistItemRowProps {
   item: ChecklistItem;

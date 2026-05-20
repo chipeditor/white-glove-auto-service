@@ -10,7 +10,7 @@ import type {
   Notification,
   AffiliateRecommendation,
   VehicleWithCustomer,
-} from '@white-glove/shared/types';
+} from '@/shared/types';
 
 const NOW = new Date().toISOString();
 const AGO = (minutes: number) =>

@@ -1,6 +1,6 @@
 import { ExternalLink } from 'lucide-react';
 import { Button } from './Button';
-import type { AffiliateRecommendation } from '@white-glove/shared/types';
+import type { AffiliateRecommendation } from '@/shared/types';
 
 interface AffiliateCardProps {
   recommendation: AffiliateRecommendation;

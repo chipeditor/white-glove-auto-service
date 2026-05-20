@@ -19,8 +19,7 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@white-glove/shared/*": ["../shared/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
@@ -29,8 +28,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts",
-    "../shared/**/*.ts"
+    "**/*.mts"
   ],
   "exclude": ["node_modules"]
 }

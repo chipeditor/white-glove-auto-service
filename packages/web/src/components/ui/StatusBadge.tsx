@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
-import type { VehicleStatus, ServiceRequestStatus, InspectionStatus } from '@white-glove/shared/types';
-import { VEHICLE_STATUS_LABELS } from '@white-glove/shared/constants';
+import type { VehicleStatus, ServiceRequestStatus, InspectionStatus } from '@/shared/types';
+import { VEHICLE_STATUS_LABELS } from '@/shared/constants';
 
 type Status = VehicleStatus | ServiceRequestStatus | InspectionStatus;
 

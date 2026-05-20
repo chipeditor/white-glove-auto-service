@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { clsx } from 'clsx';
-import type { Notification } from '@white-glove/shared/types';
+import type { Notification } from '@/shared/types';
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();

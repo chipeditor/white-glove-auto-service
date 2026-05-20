@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 import { Check, Circle, AlertTriangle } from 'lucide-react';
-import type { InspectionItem } from '@white-glove/shared/types';
+import type { InspectionItem } from '@/shared/types';
 
 interface InspectionItemRowProps {
   item: InspectionItem;

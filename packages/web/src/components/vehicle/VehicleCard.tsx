@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Car, MoreVertical } from 'lucide-react';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import type { VehicleWithCustomer } from '@white-glove/shared/types';
+import type { VehicleWithCustomer } from '@/shared/types';
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
