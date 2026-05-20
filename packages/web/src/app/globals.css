@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+:root {
+  --wg-bg-primary: #0d0d14;
+  --wg-bg-secondary: #141422;
+  --wg-bg-card: #1a1a2e;
+  --wg-bg-card-hover: #1f1f35;
+  --wg-bg-input: #12121e;
+  --wg-border: #2a2a40;
+  --wg-border-light: #333350;
+  --wg-text-primary: #f0f0f5;
+  --wg-text-secondary: #8888a0;
+  --wg-text-muted: #555570;
+  --wg-accent-blue: #4a90d9;
+  --wg-accent-green: #34c759;
+  --wg-accent-amber: #ffb340;
+  --wg-accent-red: #e94560;
+  --wg-accent-cyan: #5ac8fa;
+  --wg-sidebar-width: 260px;
+}
+
+@theme inline {
+  --color-background: var(--wg-bg-primary);
+  --color-foreground: var(--wg-text-primary);
+  --color-wg-bg: var(--wg-bg-primary);
+  --color-wg-bg2: var(--wg-bg-secondary);
+  --color-wg-card: var(--wg-bg-card);
+  --color-wg-card-hover: var(--wg-bg-card-hover);
+  --color-wg-input: var(--wg-bg-input);
+  --color-wg-border: var(--wg-border);
+  --color-wg-border-light: var(--wg-border-light);
+  --color-wg-text: var(--wg-text-primary);
+  --color-wg-text2: var(--wg-text-secondary);
+  --color-wg-muted: var(--wg-text-muted);
+  --color-wg-blue: var(--wg-accent-blue);
+  --color-wg-green: var(--wg-accent-green);
+  --color-wg-amber: var(--wg-accent-amber);
+  --color-wg-red: var(--wg-accent-red);
+  --color-wg-cyan: var(--wg-accent-cyan);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--wg-bg-primary);
+  color: var(--wg-text-primary);
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: rgba(74, 144, 217, 0.3);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--wg-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--wg-border-light);
+}
