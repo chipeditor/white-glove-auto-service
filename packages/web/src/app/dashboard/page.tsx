@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Car, CheckCircle, Clock, AlertCircle, Plus } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -18,10 +19,12 @@ export default function DashboardPage() {
           title="Dashboard"
           subtitle="Welcome back, John."
           actions={
-            <Button>
-              <Plus size={16} />
-              New Intake
-            </Button>
+            <Link href="/intake/new">
+              <Button>
+                <Plus size={16} />
+                New Intake
+              </Button>
+            </Link>
           }
         />
 
