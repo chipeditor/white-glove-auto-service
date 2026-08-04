@@ -45,7 +45,6 @@ export async function POST(request: NextRequest) {
     To: to,
     From: fromNumber,
     Body: body,
-    StatusCallback: `${process.env.NEXT_PUBLIC_APP_URL || 'https://web-nine-livid-59.vercel.app'}/api/sms/webhook`,
   });
 
   let twilioRes: Response;
