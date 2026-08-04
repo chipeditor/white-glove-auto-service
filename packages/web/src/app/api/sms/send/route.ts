@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!twilioRes.ok) {
-    // Log failed message
+    console.error('Twilio error:', JSON.stringify(twilioData));
     await supabase.from('sms_messages').insert({
       organization_id: organizationId,
       customer_id: customerId || null,
