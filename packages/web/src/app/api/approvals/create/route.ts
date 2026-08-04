@@ -42,7 +42,9 @@ export async function POST(request: NextRequest) {
     .update({ status: 'awaiting_customer_approval', updated_at: new Date().toISOString() })
     .eq('id', serviceRequestId);
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://web-nine-livid-59.vercel.app';
+  const host = request.headers.get('host') ?? '';
+  const proto = request.headers.get('x-forwarded-proto') ?? 'https';
+  const appUrl = `${proto}://${host}`;
   const approvalUrl = `${appUrl}/approve/${token}`;
 
   return Response.json({

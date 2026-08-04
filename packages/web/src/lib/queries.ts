@@ -78,33 +78,107 @@ export async function fetchVehicle(id: string): Promise<VehicleWithCustomer | nu
   return data as VehicleWithCustomer | null;
 }
 
-export async function fetchDashboardStats() {
+export interface DashboardStats {
+  vehicles_in_service: number;
+  ready_for_delivery: number;
+  awaiting_approval: number;
+  completed_this_week: number;
+  total_vehicles: number;
+  total_customers: number;
+  active_service_requests: number;
+  pending_approvals: number;
+  revenue_approved: number;
+  revenue_pending: number;
+  vehicle_statuses: Record<string, number>;
+  sr_statuses: Record<string, number>;
+  recent_activity: Array<{
+    id: string;
+    type: string;
+    title: string;
+    status: string;
+    date: string;
+    vehicle?: string;
+  }>;
+}
+
+export async function fetchDashboardStats(): Promise<DashboardStats | null> {
   const supabase = await createServerSupabaseClient();
   const orgId = await getOrgId();
   if (!orgId) return null;
 
-  const { data: vehicles } = await supabase
-    .from('vehicles')
-    .select('status')
-    .eq('organization_id', orgId);
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
 
-  if (!vehicles) return null;
+  const [vehiclesRes, srRes, customersRes, linesRes, approvalsRes, recentSrsRes] = await Promise.all([
+    supabase.from('vehicles').select('id, status').eq('organization_id', orgId),
+    supabase.from('service_requests').select('id, status, title, created_at, vehicle:vehicles(year, make, model)').eq('organization_id', orgId).order('updated_at', { ascending: false }),
+    supabase.from('customers').select('id', { count: 'exact', head: true }).eq('organization_id', orgId),
+    supabase.from('repair_order_lines').select('quantity, unit_price, status, service_request_id').eq('organization_id', orgId),
+    supabase.from('approval_requests').select('id, status, created_at').eq('organization_id', orgId).eq('status', 'pending'),
+    supabase.from('service_requests').select('id, title, status, updated_at, vehicle:vehicles(year, make, model)').eq('organization_id', orgId).order('updated_at', { ascending: false }).limit(10),
+  ]);
 
-  const counts = {
-    vehicles_in_service: 0,
-    ready_for_delivery: 0,
-    awaiting_approval: 0,
-    completed_this_week: 0,
-  };
+  const vehicles = vehiclesRes.data ?? [];
+  const srs = srRes.data ?? [];
+  const lines = linesRes.data ?? [];
+  const recentSrs = recentSrsRes.data ?? [];
+
+  const vehicleStatuses: Record<string, number> = {};
+  let vehiclesInService = 0;
+  let readyForDelivery = 0;
+  let awaitingApproval = 0;
+  let completedThisWeek = 0;
 
   for (const v of vehicles) {
-    if (v.status === 'in_service') counts.vehicles_in_service++;
-    if (v.status === 'ready_for_delivery') counts.ready_for_delivery++;
-    if (v.status === 'awaiting_approval') counts.awaiting_approval++;
-    if (v.status === 'delivered') counts.completed_this_week++;
+    vehicleStatuses[v.status] = (vehicleStatuses[v.status] || 0) + 1;
+    if (v.status === 'in_service') vehiclesInService++;
+    if (v.status === 'ready_for_delivery') readyForDelivery++;
+    if (v.status === 'awaiting_approval') awaitingApproval++;
+    if (v.status === 'delivered') completedThisWeek++;
   }
 
-  return counts;
+  const srStatuses: Record<string, number> = {};
+  let activeSrs = 0;
+  for (const sr of srs) {
+    srStatuses[sr.status] = (srStatuses[sr.status] || 0) + 1;
+    if (!['completed', 'draft', 'declined'].includes(sr.status)) activeSrs++;
+  }
+
+  let revenueApproved = 0;
+  let revenuePending = 0;
+  for (const line of lines) {
+    const total = (line.quantity ?? 1) * (line.unit_price ?? 0);
+    if (line.status === 'approved') revenueApproved += total;
+    else if (line.status === 'pending') revenuePending += total;
+  }
+
+  const activity = recentSrs.map((sr: Record<string, unknown>) => {
+    const v = sr.vehicle as Record<string, unknown> | null;
+    return {
+      id: sr.id as string,
+      type: 'service_request',
+      title: sr.title as string,
+      status: sr.status as string,
+      date: sr.updated_at as string,
+      vehicle: v ? `${v.year ?? ''} ${v.make} ${v.model}`.trim() : undefined,
+    };
+  });
+
+  return {
+    vehicles_in_service: vehiclesInService,
+    ready_for_delivery: readyForDelivery,
+    awaiting_approval: awaitingApproval,
+    completed_this_week: completedThisWeek,
+    total_vehicles: vehicles.length,
+    total_customers: customersRes.count ?? 0,
+    active_service_requests: activeSrs,
+    pending_approvals: (approvalsRes.data ?? []).length,
+    revenue_approved: revenueApproved,
+    revenue_pending: revenuePending,
+    vehicle_statuses: vehicleStatuses,
+    sr_statuses: srStatuses,
+    recent_activity: activity,
+  };
 }
 
 export async function fetchServiceRequests(): Promise<ServiceRequestWithVehicle[]> {
@@ -222,6 +296,66 @@ export async function fetchCustomers(): Promise<Customer[]> {
     .order('full_name');
 
   return (data ?? []) as Customer[];
+}
+
+export async function fetchInspectionReport(inspectionId: string) {
+  const supabase = await createServerSupabaseClient();
+
+  const { data: inspection } = await supabase
+    .from('inspections')
+    .select('*, vehicle:vehicles(*, customer:customers(*)), technician:users!inspections_technician_id_fkey(*), service_request:service_requests(*)')
+    .eq('id', inspectionId)
+    .single();
+
+  if (!inspection) return null;
+
+  const { data: sections } = await supabase
+    .from('inspection_sections')
+    .select('*, items:inspection_items(*)')
+    .eq('inspection_id', inspectionId)
+    .order('sort_order');
+
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('*')
+    .eq('id', (inspection.vehicle as Record<string, unknown>)?.organization_id as string)
+    .single();
+
+  return {
+    inspection,
+    sections: sections ?? [],
+    organization: org,
+  };
+}
+
+export async function fetchEstimateReport(serviceRequestId: string) {
+  const supabase = await createServerSupabaseClient();
+
+  const { data: sr } = await supabase
+    .from('service_requests')
+    .select('*, vehicle:vehicles(*, customer:customers(*)), advisor:users!service_requests_advisor_id_fkey(*)')
+    .eq('id', serviceRequestId)
+    .single();
+
+  if (!sr) return null;
+
+  const { data: lines } = await supabase
+    .from('repair_order_lines')
+    .select('*')
+    .eq('service_request_id', serviceRequestId)
+    .order('sort_order');
+
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('*')
+    .eq('id', sr.organization_id)
+    .single();
+
+  return {
+    serviceRequest: sr,
+    lines: lines ?? [],
+    organization: org,
+  };
 }
 
 export async function fetchAffiliateRecommendations(
