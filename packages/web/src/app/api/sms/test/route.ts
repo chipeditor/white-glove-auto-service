@@ -10,7 +10,7 @@ export async function GET() {
   const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
   const body = new URLSearchParams({
     To: '+18478816560',
-    From: fromNumber,
+    From: '+15722318038',
     Body: 'Test from White Glove Auto Service',
   });
 
