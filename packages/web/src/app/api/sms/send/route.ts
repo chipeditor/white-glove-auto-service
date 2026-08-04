@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Send via Twilio REST API
+  console.log('SMS params:', { to, from: fromNumber, bodyLength: body?.length, orgPhone: org?.twilio_phone_number, envPhone: process.env.TWILIO_PHONE_NUMBER });
   const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
   const twilioBody = new URLSearchParams({
     To: to,
