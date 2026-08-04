@@ -18,27 +18,10 @@ struct LoginView: View {
                 Spacer()
 
                 // Branding
-                VStack(spacing: 16) {
-                    Image(systemName: "shield.checkered")
-                        .font(.system(size: 64))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [goldColor, goldColor.opacity(0.7)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-
-                    Text("WHITE GLOVE")
-                        .font(.system(size: 32, weight: .bold, design: .default))
-                        .tracking(6)
-                        .foregroundColor(goldColor)
-
-                    Text("AUTO SERVICE")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(goldColor.opacity(0.6))
-                        .tracking(6)
-                }
+                Image("KSBLogo")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: 280)
 
                 // Login Form
                 VStack(spacing: 20) {
