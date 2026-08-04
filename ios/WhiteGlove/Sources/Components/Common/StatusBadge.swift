@@ -25,11 +25,13 @@ struct ServiceStatusBadge: View {
 
     private var color: Color {
         switch status {
-        case .pending: return .orange
+        case .draft: return Theme.mutedColor
+        case .submitted, .awaitingCustomerApproval: return .orange
         case .approved: return Theme.blueColor
-        case .inProgress: return Theme.blueColor
+        case .declined: return Theme.alertColor
+        case .inProgress, .qualityControl: return Theme.blueColor
+        case .readyForDelivery: return Theme.greenColor
         case .completed: return Theme.greenColor
-        case .cancelled: return Theme.mutedColor
         }
     }
 

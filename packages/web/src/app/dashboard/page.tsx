@@ -1,5 +1,3 @@
-'use client';
-
 import Link from 'next/link';
 import { Car, CheckCircle, Clock, AlertCircle, Plus } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
@@ -7,17 +5,25 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { StatCard } from '@/components/ui/StatCard';
 import { Button } from '@/components/ui/Button';
 import { VehicleTable } from '@/components/vehicle/VehicleCard';
-import { MOCK_VEHICLES_WITH_CUSTOMERS, DASHBOARD_STATS } from '@/lib/mock-data';
+import { fetchVehicles, fetchDashboardStats, getCurrentUser } from '@/lib/queries';
 
-export default function DashboardPage() {
-  const stats = DASHBOARD_STATS;
+export default async function DashboardPage() {
+  const [vehicles, stats, user] = await Promise.all([
+    fetchVehicles(),
+    fetchDashboardStats(),
+    getCurrentUser(),
+  ]);
+
+  const greeting = user?.full_name
+    ? `Welcome back, ${user.full_name.split(' ')[0]}.`
+    : 'Welcome back.';
 
   return (
     <AppShell>
       <div className="p-8">
         <PageHeader
           title="Dashboard"
-          subtitle="Welcome back, John."
+          subtitle={greeting}
           actions={
             <Link href="/intake/new">
               <Button>
@@ -31,28 +37,22 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
           <StatCard
             label="Vehicles In Service"
-            value={stats.vehicles_in_service}
-            delta={stats.vehicles_in_service_delta}
+            value={stats?.vehicles_in_service ?? 0}
             icon={Car}
           />
           <StatCard
             label="Ready for Delivery"
-            value={stats.ready_for_delivery}
-            delta={stats.ready_for_delivery_delta}
+            value={stats?.ready_for_delivery ?? 0}
             icon={CheckCircle}
           />
           <StatCard
             label="Awaiting Approval"
-            value={stats.awaiting_approval}
-            delta={stats.awaiting_approval_delta}
-            deltaLabel="0 from yesterday"
+            value={stats?.awaiting_approval ?? 0}
             icon={Clock}
           />
           <StatCard
             label="Completed This Week"
-            value={stats.completed_this_week}
-            delta={stats.completed_this_week_delta}
-            deltaLabel="4 from last week"
+            value={stats?.completed_this_week ?? 0}
             icon={AlertCircle}
           />
         </div>
@@ -60,9 +60,11 @@ export default function DashboardPage() {
         <div className="mt-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-medium text-wg-text">Recent Vehicles</h2>
-            <Button variant="ghost" size="sm">View All</Button>
+            <Link href="/vehicles">
+              <Button variant="ghost" size="sm">View All</Button>
+            </Link>
           </div>
-          <VehicleTable vehicles={MOCK_VEHICLES_WITH_CUSTOMERS} />
+          <VehicleTable vehicles={vehicles} />
         </div>
       </div>
     </AppShell>

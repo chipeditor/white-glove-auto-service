@@ -30,64 +30,80 @@ enum Theme {
 // MARK: - Enums
 
 enum VehicleStatus: String, Codable, Sendable, CaseIterable {
-    case intake = "intake"
+    case intakeStarted = "intake_started"
     case intakeCompleted = "intake_completed"
     case awaitingApproval = "awaiting_approval"
     case inService = "in_service"
     case readyForDelivery = "ready_for_delivery"
     case delivered = "delivered"
+    case archived = "archived"
 
     var displayName: String {
         switch self {
-        case .intake: return "Intake"
+        case .intakeStarted: return "Intake Started"
         case .intakeCompleted: return "Intake Completed"
         case .awaitingApproval: return "Awaiting Approval"
         case .inService: return "In Service"
         case .readyForDelivery: return "Ready for Delivery"
         case .delivered: return "Delivered"
+        case .archived: return "Archived"
         }
     }
 
     var statusColor: String {
         switch self {
-        case .intake: return Theme.text2
+        case .intakeStarted: return Theme.text2
         case .intakeCompleted: return Theme.blue
         case .awaitingApproval: return "#f59e0b"
         case .inService: return Theme.blue
         case .readyForDelivery: return Theme.green
         case .delivered: return Theme.green
+        case .archived: return Theme.muted
         }
     }
 }
 
 enum ServiceRequestStatus: String, Codable, Sendable, CaseIterable {
-    case pending = "pending"
+    case draft = "draft"
+    case submitted = "submitted"
+    case awaitingCustomerApproval = "awaiting_customer_approval"
     case approved = "approved"
+    case declined = "declined"
     case inProgress = "in_progress"
+    case qualityControl = "quality_control"
+    case readyForDelivery = "ready_for_delivery"
     case completed = "completed"
-    case cancelled = "cancelled"
 
     var displayName: String {
         switch self {
-        case .pending: return "Pending"
+        case .draft: return "Draft"
+        case .submitted: return "Submitted"
+        case .awaitingCustomerApproval: return "Awaiting Approval"
         case .approved: return "Approved"
+        case .declined: return "Declined"
         case .inProgress: return "In Progress"
+        case .qualityControl: return "Quality Control"
+        case .readyForDelivery: return "Ready for Delivery"
         case .completed: return "Completed"
-        case .cancelled: return "Cancelled"
         }
     }
 }
 
 enum InspectionStatus: String, Codable, Sendable {
-    case pending = "pending"
+    case notStarted = "not_started"
     case inProgress = "in_progress"
     case completed = "completed"
+    case needsAttention = "needs_attention"
+    case signedOff = "signed_off"
 }
 
 enum InspectionType: String, Codable, Sendable {
     case intake = "intake"
-    case preDelivery = "pre_delivery"
-    case damage = "damage"
+    case mechanical = "mechanical"
+    case cosmetic = "cosmetic"
+    case delivery = "delivery"
+    case qualityControl = "quality_control"
+    case spotCheck = "spot_check"
 }
 
 enum MediaType: String, Codable, Sendable {
@@ -97,10 +113,16 @@ enum MediaType: String, Codable, Sendable {
 }
 
 enum NotificationType: String, Codable, Sendable {
-    case update = "update"
-    case alert = "alert"
-    case approval = "approval"
-    case completion = "completion"
+    case intakeStarted = "intake_started"
+    case intakeCompleted = "intake_completed"
+    case approvalNeeded = "approval_needed"
+    case approvalReceived = "approval_received"
+    case serviceStarted = "service_started"
+    case serviceCompleted = "service_completed"
+    case deliveryReady = "delivery_ready"
+    case vehicleDelivered = "vehicle_delivered"
+    case issueFlagged = "issue_flagged"
+    case reportReady = "report_ready"
 }
 
 enum DamageSeverity: String, Codable, Sendable {
@@ -110,10 +132,12 @@ enum DamageSeverity: String, Codable, Sendable {
 }
 
 enum UserRole: String, Codable, Sendable {
-    case admin = "admin"
+    case superAdmin = "super_admin"
+    case shopAdmin = "shop_admin"
+    case serviceAdvisor = "service_advisor"
     case technician = "technician"
-    case manager = "manager"
-    case viewer = "viewer"
+    case deliverySpecialist = "delivery_specialist"
+    case customer = "customer"
 }
 
 // MARK: - Models
@@ -183,7 +207,7 @@ struct Customer: Codable, Identifiable, Sendable {
 struct Vehicle: Codable, Identifiable, Sendable {
     let id: UUID
     let organizationId: UUID
-    let customerId: UUID
+    let customerId: UUID?
     let vin: String?
     let year: Int?
     let make: String
@@ -218,18 +242,17 @@ struct ServiceRequest: Codable, Identifiable, Sendable {
     let title: String
     let description: String?
     let status: ServiceRequestStatus
-    let estimatedCost: Double?
-    let approvedAt: Date?
-    let completedAt: Date?
+    let priority: Int
+    let estimatedCompletion: Date?
+    let actualCompletion: Date?
     let createdAt: Date
 
     enum CodingKeys: String, CodingKey {
-        case id, title, description, status
+        case id, title, description, status, priority
         case vehicleId = "vehicle_id"
         case organizationId = "organization_id"
-        case estimatedCost = "estimated_cost"
-        case approvedAt = "approved_at"
-        case completedAt = "completed_at"
+        case estimatedCompletion = "estimated_completion"
+        case actualCompletion = "actual_completion"
         case createdAt = "created_at"
     }
 }
@@ -284,19 +307,33 @@ struct InspectionItem: Codable, Identifiable, Sendable {
 
 struct MediaAsset: Codable, Identifiable, Sendable {
     let id: UUID
+    let organizationId: UUID
     let vehicleId: UUID?
     let inspectionId: UUID?
+    let inspectionItemId: UUID?
+    let uploadedBy: UUID?
     let type: MediaType
+    let storagePath: String
     let url: String
     let thumbnailUrl: String?
+    let fileName: String?
+    let fileSize: Int?
+    let mimeType: String?
     let caption: String?
     let createdAt: Date
 
     enum CodingKeys: String, CodingKey {
         case id, type, url, caption
+        case organizationId = "organization_id"
         case vehicleId = "vehicle_id"
         case inspectionId = "inspection_id"
+        case inspectionItemId = "inspection_item_id"
+        case uploadedBy = "uploaded_by"
+        case storagePath = "storage_path"
         case thumbnailUrl = "thumbnail_url"
+        case fileName = "file_name"
+        case fileSize = "file_size"
+        case mimeType = "mime_type"
         case createdAt = "created_at"
     }
 }
@@ -338,15 +375,14 @@ struct ChecklistItem: Codable, Identifiable, Sendable {
     let id: UUID
     let checklistId: UUID
     let label: String
-    var isCompleted: Bool
+    var completed: Bool
     let completedBy: UUID?
     let completedAt: Date?
     let sortOrder: Int
 
     enum CodingKeys: String, CodingKey {
-        case id, label
+        case id, label, completed
         case checklistId = "checklist_id"
-        case isCompleted = "is_completed"
         case completedBy = "completed_by"
         case completedAt = "completed_at"
         case sortOrder = "sort_order"
@@ -359,14 +395,13 @@ struct Notification: Codable, Identifiable, Sendable {
     let type: NotificationType
     let title: String
     let body: String
-    let isRead: Bool
+    let read: Bool
     let vehicleId: UUID?
     let createdAt: Date
 
     enum CodingKeys: String, CodingKey {
-        case id, type, title, body
+        case id, type, title, body, read
         case userId = "user_id"
-        case isRead = "is_read"
         case vehicleId = "vehicle_id"
         case createdAt = "created_at"
     }

@@ -13,17 +13,19 @@ struct InspectionSectionCard: View {
 
     private var statusIcon: String {
         switch status {
-        case .pending: return "circle"
+        case .notStarted: return "circle"
         case .inProgress: return "circle.lefthalf.filled"
-        case .completed: return "checkmark.circle.fill"
+        case .completed, .signedOff: return "checkmark.circle.fill"
+        case .needsAttention: return "exclamationmark.triangle.fill"
         }
     }
 
     private var statusColor: Color {
         switch status {
-        case .pending: return .secondary
+        case .notStarted: return .secondary
         case .inProgress: return .orange
-        case .completed: return .green
+        case .completed, .signedOff: return .green
+        case .needsAttention: return .red
         }
     }
 
@@ -62,7 +64,7 @@ struct InspectionSectionCard: View {
     VStack(spacing: 12) {
         InspectionSectionCard(name: "Exterior", itemCount: 12, completedCount: 8, status: .inProgress)
         InspectionSectionCard(name: "Interior", itemCount: 10, completedCount: 10, status: .completed)
-        InspectionSectionCard(name: "Engine Bay", itemCount: 8, completedCount: 0, status: .pending)
+        InspectionSectionCard(name: "Engine Bay", itemCount: 8, completedCount: 0, status: .notStarted)
     }
     .padding()
     .background(Theme.bgColor)

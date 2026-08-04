@@ -28,6 +28,11 @@ struct MainTabView: View {
                     Label("Vehicles", systemImage: "car.fill")
                 }
 
+            ServiceRequestListView()
+                .tabItem {
+                    Label("Work Orders", systemImage: "wrench.and.screwdriver.fill")
+                }
+
             IntakeWizardView()
                 .tabItem {
                     Label("Intake", systemImage: "plus.circle.fill")

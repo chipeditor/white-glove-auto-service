@@ -163,10 +163,15 @@ export interface ServiceRequest extends Timestamps {
   advisor_id: string | null;
   title: string;
   description: string | null;
+  technician_id: string | null;
   status: ServiceRequestStatus;
   priority: number;
   estimated_completion: string | null;
   actual_completion: string | null;
+  subtotal: number;
+  tax_rate: number;
+  tax_amount: number;
+  total: number;
 }
 
 export interface Inspection extends Timestamps {
@@ -344,12 +349,92 @@ export interface ChecklistWithItems extends Checklist {
   items: ChecklistItem[];
 }
 
+export type LineItemType = 'labor' | 'parts' | 'sublet' | 'fee' | 'discount';
+export type LineItemStatus = 'pending' | 'approved' | 'declined' | 'in_progress' | 'completed';
+
+export interface RepairOrderLine extends Timestamps {
+  id: string;
+  service_request_id: string;
+  organization_id: string;
+  canned_job_id: string | null;
+  inspection_item_id: string | null;
+  line_type: LineItemType;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  discount_amount: number;
+  total: number;
+  status: LineItemStatus;
+  technician_id: string | null;
+  sort_order: number;
+  notes: string | null;
+}
+
+export interface ServiceRequestWithVehicle extends ServiceRequest {
+  vehicle: Vehicle;
+  customer: Customer | null;
+  technician: User | null;
+}
+
 export interface ServiceRequestWithDetails extends ServiceRequest {
   vehicle: Vehicle;
   customer: Customer | null;
   advisor: User | null;
+  technician: User | null;
   inspections: Inspection[];
   checklists: Checklist[];
+  lines: RepairOrderLine[];
+}
+
+export type ApprovalStatus = 'pending' | 'viewed' | 'approved' | 'partially_approved' | 'declined';
+export type SmsDirection = 'outbound' | 'inbound';
+export type SmsStatus = 'queued' | 'sent' | 'delivered' | 'failed' | 'received';
+
+export interface ApprovalRequest extends Timestamps {
+  id: string;
+  organization_id: string;
+  service_request_id: string;
+  customer_id: string | null;
+  token: string;
+  status: ApprovalStatus;
+  expires_at: string;
+  viewed_at: string | null;
+  responded_at: string | null;
+  customer_comments: string | null;
+  approved_line_ids: string[];
+  declined_line_ids: string[];
+  created_by: string | null;
+}
+
+export interface SmsMessage {
+  id: string;
+  organization_id: string;
+  customer_id: string | null;
+  service_request_id: string | null;
+  direction: SmsDirection;
+  from_number: string;
+  to_number: string;
+  body: string;
+  status: SmsStatus;
+  twilio_sid: string | null;
+  error_message: string | null;
+  sent_at: string | null;
+  delivered_at: string | null;
+  created_at: string;
+}
+
+export interface DeclinedJob {
+  id: string;
+  organization_id: string;
+  customer_id: string;
+  vehicle_id: string;
+  service_request_id: string;
+  repair_order_line_id: string;
+  description: string;
+  unit_price: number;
+  reason: string | null;
+  re_recommended: boolean;
+  created_at: string;
 }
 
 export interface VehicleDetail extends Vehicle {

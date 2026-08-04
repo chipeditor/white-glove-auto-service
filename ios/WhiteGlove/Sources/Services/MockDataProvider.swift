@@ -44,15 +44,17 @@ final class MockDataProvider: DataProvider {
 
     let users: [User] = [
         User(id: userAdminId, email: "john@whiteglove.com", fullName: "John Smith",
-             avatarUrl: nil, role: .admin, createdAt: ago(50400)),
+             avatarUrl: nil, role: .shopAdmin, createdAt: ago(50400)),
         User(id: userAdvisorId, email: "lisa@whiteglove.com", fullName: "Lisa Chen",
-             avatarUrl: nil, role: .manager, createdAt: ago(50400)),
+             avatarUrl: nil, role: .serviceAdvisor, createdAt: ago(50400)),
         User(id: userTechId, email: "james@whiteglove.com", fullName: "James Taylor",
              avatarUrl: nil, role: .technician, createdAt: ago(40320)),
         User(id: userTech2Id, email: "maria@whiteglove.com", fullName: "Maria Garcia",
              avatarUrl: nil, role: .technician, createdAt: ago(40320)),
         User(id: userMechId, email: "robert@whiteglove.com", fullName: "Robert Kim",
              avatarUrl: nil, role: .technician, createdAt: ago(30240)),
+        User(id: userCustId, email: "mike.johnson@email.com", fullName: "Mike Johnson",
+             avatarUrl: nil, role: .customer, createdAt: ago(10080)),
     ]
 
     // MARK: - Customers
@@ -91,7 +93,7 @@ final class MockDataProvider: DataProvider {
         Vehicle(id: veh4Id, organizationId: orgId, customerId: cust4Id,
                 vin: "WDB4632761X345678", year: 2019, make: "Mercedes-Benz", model: "G63 AMG",
                 color: "Obsidian Black", licensePlate: nil, mileage: 34200,
-                status: .intake, notes: nil,
+                status: .intakeStarted, notes: nil,
                 createdAt: ago(14400), updatedAt: ago(300)),
         Vehicle(id: veh5Id, organizationId: orgId, customerId: cust5Id,
                 vin: "WUAPWAF55JA123456", year: 2018, make: "Audi", model: "RS5",
@@ -106,8 +108,8 @@ final class MockDataProvider: DataProvider {
         ServiceRequest(id: sr1Id, vehicleId: veh1Id, organizationId: orgId,
                        title: "Performance inspection and delivery verification",
                        description: "Full performance inspection including engine, brakes, suspension, and delivery prep.",
-                       status: .inProgress, estimatedCost: 1250.00, approvedAt: ago(2800),
-                       completedAt: nil, createdAt: ago(2880)),
+                       status: .inProgress, priority: 1, estimatedCompletion: nil,
+                       actualCompletion: nil, createdAt: ago(2880)),
     ]
 
     // MARK: - Inspections
@@ -117,13 +119,13 @@ final class MockDataProvider: DataProvider {
                    type: .intake, status: .completed, notes: nil,
                    completedAt: ago(2700), createdAt: ago(2880)),
         Inspection(id: insp2Id, vehicleId: veh1Id, inspectorId: userTech2Id,
-                   type: .preDelivery, status: .inProgress, notes: nil,
+                   type: .delivery, status: .inProgress, notes: nil,
                    completedAt: nil, createdAt: ago(2880)),
     ]
 
     // MARK: - Inspection Sections & Items
 
-    let inspectionSections: [InspectionSection] = [
+    var inspectionSections: [InspectionSection] = [
         InspectionSection(
             id: UUID(uuidString: "00000000-0000-0000-0001-000000000001")!,
             inspectionId: insp1Id, name: "Exterior Front", sortOrder: 0,
@@ -212,51 +214,51 @@ final class MockDataProvider: DataProvider {
             items: [
                 ChecklistItem(id: UUID(uuidString: "00000000-0000-0000-0004-000000000001")!,
                               checklistId: UUID(uuidString: "00000000-0000-0000-0003-000000000001")!,
-                              label: "Engine oil and filter change", isCompleted: true,
+                              label: "Engine oil and filter change", completed: true,
                               completedBy: userTechId, completedAt: ago(1440), sortOrder: 0),
                 ChecklistItem(id: UUID(uuidString: "00000000-0000-0000-0004-000000000002")!,
                               checklistId: UUID(uuidString: "00000000-0000-0000-0003-000000000001")!,
-                              label: "Brake fluid flush", isCompleted: true,
+                              label: "Brake fluid flush", completed: true,
                               completedBy: userTechId, completedAt: ago(1200), sortOrder: 1),
                 ChecklistItem(id: UUID(uuidString: "00000000-0000-0000-0004-000000000003")!,
                               checklistId: UUID(uuidString: "00000000-0000-0000-0003-000000000001")!,
-                              label: "Coolant system inspection", isCompleted: true,
+                              label: "Coolant system inspection", completed: true,
                               completedBy: userTechId, completedAt: ago(960), sortOrder: 2),
                 ChecklistItem(id: UUID(uuidString: "00000000-0000-0000-0004-000000000004")!,
                               checklistId: UUID(uuidString: "00000000-0000-0000-0003-000000000001")!,
-                              label: "Tire rotation and balance", isCompleted: true,
+                              label: "Tire rotation and balance", completed: true,
                               completedBy: userTechId, completedAt: ago(720), sortOrder: 3),
                 ChecklistItem(id: UUID(uuidString: "00000000-0000-0000-0004-000000000005")!,
                               checklistId: UUID(uuidString: "00000000-0000-0000-0003-000000000001")!,
-                              label: "Alignment check", isCompleted: true,
+                              label: "Alignment check", completed: true,
                               completedBy: userTechId, completedAt: ago(480), sortOrder: 4),
                 ChecklistItem(id: UUID(uuidString: "00000000-0000-0000-0004-000000000006")!,
                               checklistId: UUID(uuidString: "00000000-0000-0000-0003-000000000001")!,
-                              label: "Suspension inspection", isCompleted: true,
+                              label: "Suspension inspection", completed: true,
                               completedBy: userTechId, completedAt: ago(360), sortOrder: 5),
                 ChecklistItem(id: UUID(uuidString: "00000000-0000-0000-0004-000000000007")!,
                               checklistId: UUID(uuidString: "00000000-0000-0000-0003-000000000001")!,
-                              label: "Exhaust system check", isCompleted: true,
+                              label: "Exhaust system check", completed: true,
                               completedBy: userTechId, completedAt: ago(240), sortOrder: 6),
                 ChecklistItem(id: UUID(uuidString: "00000000-0000-0000-0004-000000000008")!,
                               checklistId: UUID(uuidString: "00000000-0000-0000-0003-000000000001")!,
-                              label: "Electrical systems diagnostic", isCompleted: false,
+                              label: "Electrical systems diagnostic", completed: false,
                               completedBy: nil, completedAt: nil, sortOrder: 7),
                 ChecklistItem(id: UUID(uuidString: "00000000-0000-0000-0004-000000000009")!,
                               checklistId: UUID(uuidString: "00000000-0000-0000-0003-000000000001")!,
-                              label: "Performance data logging", isCompleted: false,
+                              label: "Performance data logging", completed: false,
                               completedBy: nil, completedAt: nil, sortOrder: 8),
                 ChecklistItem(id: UUID(uuidString: "00000000-0000-0000-0004-000000000010")!,
                               checklistId: UUID(uuidString: "00000000-0000-0000-0003-000000000001")!,
-                              label: "Interior detail and cleaning", isCompleted: false,
+                              label: "Interior detail and cleaning", completed: false,
                               completedBy: nil, completedAt: nil, sortOrder: 9),
                 ChecklistItem(id: UUID(uuidString: "00000000-0000-0000-0004-000000000011")!,
                               checklistId: UUID(uuidString: "00000000-0000-0000-0003-000000000001")!,
-                              label: "Exterior wash and polish", isCompleted: false,
+                              label: "Exterior wash and polish", completed: false,
                               completedBy: nil, completedAt: nil, sortOrder: 10),
                 ChecklistItem(id: UUID(uuidString: "00000000-0000-0000-0004-000000000012")!,
                               checklistId: UUID(uuidString: "00000000-0000-0000-0003-000000000001")!,
-                              label: "Final quality inspection", isCompleted: false,
+                              label: "Final quality inspection", completed: false,
                               completedBy: nil, completedAt: nil, sortOrder: 11),
             ],
             createdAt: ago(2880)),
@@ -266,37 +268,37 @@ final class MockDataProvider: DataProvider {
 
     var notifications: [Notification] = [
         Notification(id: UUID(uuidString: "00000000-0000-0000-0005-000000000001")!,
-                     userId: userAdminId, type: .update, title: "Intake Completed",
+                     userId: userAdminId, type: .intakeCompleted, title: "Intake Completed",
                      body: "Your Corvette Z51 intake inspection is complete and ready for review.",
-                     isRead: false, vehicleId: veh1Id, createdAt: ago(2)),
+                     read: false, vehicleId: veh1Id, createdAt: ago(2)),
         Notification(id: UUID(uuidString: "00000000-0000-0000-0005-000000000002")!,
-                     userId: userAdminId, type: .approval, title: "Approval Needed",
+                     userId: userAdminId, type: .approvalNeeded, title: "Approval Needed",
                      body: "Additional approval is needed for recommended repairs on the M4 Competition.",
-                     isRead: false, vehicleId: veh3Id, createdAt: ago(60)),
+                     read: false, vehicleId: veh3Id, createdAt: ago(60)),
         Notification(id: UUID(uuidString: "00000000-0000-0000-0005-000000000003")!,
-                     userId: userAdminId, type: .update, title: "Service Started",
+                     userId: userAdminId, type: .serviceStarted, title: "Service Started",
                      body: "We've started working on the Corvette Z51. You'll be notified at every step.",
-                     isRead: true, vehicleId: veh1Id, createdAt: ago(180)),
+                     read: true, vehicleId: veh1Id, createdAt: ago(180)),
         Notification(id: UUID(uuidString: "00000000-0000-0000-0005-000000000004")!,
-                     userId: userAdminId, type: .alert, title: "Technician Note",
+                     userId: userAdminId, type: .issueFlagged, title: "Technician Note",
                      body: "Light scratches noted on front bumper during Corvette Z51 inspection.",
-                     isRead: true, vehicleId: veh1Id, createdAt: ago(300)),
+                     read: true, vehicleId: veh1Id, createdAt: ago(300)),
         Notification(id: UUID(uuidString: "00000000-0000-0000-0005-000000000005")!,
-                     userId: userAdminId, type: .completion, title: "Delivery Ready",
+                     userId: userAdminId, type: .deliveryReady, title: "Delivery Ready",
                      body: "Great news — the 911 Carrera S is ready for delivery. Contact us to schedule pickup.",
-                     isRead: true, vehicleId: veh2Id, createdAt: ago(1440)),
+                     read: true, vehicleId: veh2Id, createdAt: ago(1440)),
         Notification(id: UUID(uuidString: "00000000-0000-0000-0005-000000000006")!,
-                     userId: userAdminId, type: .alert, title: "Brake Pad Warning",
+                     userId: userAdminId, type: .issueFlagged, title: "Brake Pad Warning",
                      body: "Front brake pads at 35% on the Corvette Z51. Replacement recommended within 5,000 miles.",
-                     isRead: false, vehicleId: veh1Id, createdAt: ago(120)),
+                     read: false, vehicleId: veh1Id, createdAt: ago(120)),
         Notification(id: UUID(uuidString: "00000000-0000-0000-0005-000000000007")!,
-                     userId: userAdminId, type: .completion, title: "Oil Change Complete",
+                     userId: userAdminId, type: .serviceCompleted, title: "Oil Change Complete",
                      body: "Engine oil and filter change completed on the Corvette Z51.",
-                     isRead: true, vehicleId: veh1Id, createdAt: ago(1440)),
+                     read: true, vehicleId: veh1Id, createdAt: ago(1440)),
         Notification(id: UUID(uuidString: "00000000-0000-0000-0005-000000000008")!,
-                     userId: userAdminId, type: .update, title: "New Vehicle Intake",
+                     userId: userAdminId, type: .intakeStarted, title: "New Vehicle Intake",
                      body: "2019 Mercedes-Benz G63 AMG has been checked in by James Taylor.",
-                     isRead: true, vehicleId: veh4Id, createdAt: ago(300)),
+                     read: true, vehicleId: veh4Id, createdAt: ago(300)),
     ]
 
     // MARK: - DataProvider conformance
@@ -329,6 +331,15 @@ final class MockDataProvider: DataProvider {
             throw MockError.notFound
         }
         return vehicle
+    }
+
+    func fetchVehiclesForCustomer(email: String) async throws -> [Vehicle] {
+        try await Task.sleep(nanoseconds: 300_000_000)
+        guard let customer = customers.first(where: { $0.email == email }) else {
+            return []
+        }
+        return vehicles.filter { $0.customerId == customer.id }
+            .sorted { $0.updatedAt > $1.updatedAt }
     }
 
     func createVehicle(_ vehicle: Vehicle) async throws -> Vehicle {
@@ -393,6 +404,48 @@ final class MockDataProvider: DataProvider {
             .sorted { $0.sortOrder < $1.sortOrder }
     }
 
+    func updateInspectionItem(id: UUID, passed: Bool?, notes: String?) async throws {
+        try await Task.sleep(nanoseconds: 200_000_000)
+        for si in inspectionSections.indices {
+            guard var items = inspectionSections[si].items else { continue }
+            if let ii = items.firstIndex(where: { $0.id == id }) {
+                let old = items[ii]
+                items[ii] = InspectionItem(
+                    id: old.id, sectionId: old.sectionId, label: old.label,
+                    passed: passed ?? old.passed, notes: notes ?? old.notes,
+                    sortOrder: old.sortOrder
+                )
+                let sec = inspectionSections[si]
+                inspectionSections[si] = InspectionSection(
+                    id: sec.id, inspectionId: sec.inspectionId,
+                    name: sec.name, sortOrder: sec.sortOrder, items: items
+                )
+                return
+            }
+        }
+    }
+
+    func updateInspectionStatus(id: UUID, status: InspectionStatus) async throws {
+        try await Task.sleep(nanoseconds: 200_000_000)
+    }
+
+    func uploadPhoto(imageData: Data, vehicleId: UUID, inspectionId: UUID?, inspectionItemId: UUID?, organizationId: UUID) async throws -> MediaAsset {
+        try await Task.sleep(nanoseconds: 500_000_000)
+        return MediaAsset(
+            id: UUID(), organizationId: organizationId,
+            vehicleId: vehicleId, inspectionId: inspectionId,
+            inspectionItemId: inspectionItemId, uploadedBy: MockDataProvider.userAdminId,
+            type: .photo, storagePath: "mock/\(UUID().uuidString).jpg",
+            url: "https://placeholder.co/400", thumbnailUrl: nil,
+            fileName: "photo.jpg", fileSize: imageData.count,
+            mimeType: "image/jpeg", caption: nil, createdAt: Date()
+        )
+    }
+
+    func fetchMediaAssets(vehicleId: UUID) async throws -> [MediaAsset] {
+        return []
+    }
+
     func fetchChecklists(vehicleId: UUID) async throws -> [Checklist] {
         return checklists.filter { $0.vehicleId == vehicleId }
     }
@@ -401,7 +454,7 @@ final class MockDataProvider: DataProvider {
         for ci in checklists.indices {
             if var items = checklists[ci].items,
                let ii = items.firstIndex(where: { $0.id == id }) {
-                items[ii].isCompleted = completed
+                items[ii].completed = completed
                 let old = checklists[ci]
                 checklists[ci] = Checklist(
                     id: old.id, vehicleId: old.vehicleId, title: old.title,
@@ -423,7 +476,7 @@ final class MockDataProvider: DataProvider {
             let old = notifications[idx]
             notifications[idx] = Notification(
                 id: old.id, userId: old.userId, type: old.type,
-                title: old.title, body: old.body, isRead: true,
+                title: old.title, body: old.body, read: true,
                 vehicleId: old.vehicleId, createdAt: old.createdAt
             )
         }

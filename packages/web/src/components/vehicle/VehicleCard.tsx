@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Car, MoreVertical } from 'lucide-react';
 import { StatusBadge } from '@/components/ui/StatusBadge';

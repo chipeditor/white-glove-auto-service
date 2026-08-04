@@ -13,6 +13,7 @@ protocol DataProvider {
     // Vehicles
     func fetchVehicles(organizationId: UUID) async throws -> [Vehicle]
     func fetchVehicle(id: UUID) async throws -> Vehicle
+    func fetchVehiclesForCustomer(email: String) async throws -> [Vehicle]
     func createVehicle(_ vehicle: Vehicle) async throws -> Vehicle
     func updateVehicleStatus(id: UUID, status: VehicleStatus) async throws
 
@@ -29,6 +30,12 @@ protocol DataProvider {
     func fetchInspections(vehicleId: UUID) async throws -> [Inspection]
     func fetchInspection(id: UUID) async throws -> Inspection
     func fetchInspectionSections(inspectionId: UUID) async throws -> [InspectionSection]
+    func updateInspectionItem(id: UUID, passed: Bool?, notes: String?) async throws
+    func updateInspectionStatus(id: UUID, status: InspectionStatus) async throws
+
+    // Media
+    func uploadPhoto(imageData: Data, vehicleId: UUID, inspectionId: UUID?, inspectionItemId: UUID?, organizationId: UUID) async throws -> MediaAsset
+    func fetchMediaAssets(vehicleId: UUID) async throws -> [MediaAsset]
 
     // Checklists
     func fetchChecklists(vehicleId: UUID) async throws -> [Checklist]

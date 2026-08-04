@@ -1,0 +1,561 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A1000001 /* WhiteGloveApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000001 /* WhiteGloveApp.swift */; };
+		A1000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000002 /* ContentView.swift */; };
+		A1000010 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000010 /* Models.swift */; };
+		A1000020 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000020 /* AuthService.swift */; };
+		A1000021 /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000021 /* SupabaseService.swift */; };
+		A1000022 /* DataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000022 /* DataProvider.swift */; };
+		A1000023 /* MockDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000023 /* MockDataProvider.swift */; };
+		A1000030 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000030 /* LoginView.swift */; };
+		A1000031 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000031 /* DashboardView.swift */; };
+		A1000032 /* VehicleListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000032 /* VehicleListView.swift */; };
+		A1000033 /* VehicleDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000033 /* VehicleDetailView.swift */; };
+		A1000034 /* IntakeWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000034 /* IntakeWizardView.swift */; };
+		A1000035 /* InspectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000035 /* InspectionView.swift */; };
+		A1000036 /* MediaCaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000036 /* MediaCaptureView.swift */; };
+		A1000037 /* ChecklistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000037 /* ChecklistView.swift */; };
+		A1000038 /* DeliveryChecklistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000038 /* DeliveryChecklistView.swift */; };
+		A1000039 /* NotificationCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000039 /* NotificationCenterView.swift */; };
+		A1000040 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000040 /* StatusBadge.swift */; };
+		A1000041 /* ProgressStepper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000041 /* ProgressStepper.swift */; };
+		A1000042 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000042 /* EmptyStateView.swift */; };
+		A1000043 /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000043 /* LoadingView.swift */; };
+		A1000044 /* VehicleCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000044 /* VehicleCard.swift */; };
+		A1000045 /* InspectionSectionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000045 /* InspectionSectionCard.swift */; };
+		A1000046 /* ChecklistItemRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000046 /* ChecklistItemRow.swift */; };
+		A1000047 /* MediaGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000047 /* MediaGrid.swift */; };
+		A1000050 /* ServiceRequestListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000050 /* ServiceRequestListView.swift */; };
+		A1000051 /* ServiceRequestDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000051 /* ServiceRequestDetailView.swift */; };
+		A1000060 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = C1000001 /* Supabase */; };
+		A1000061 /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = C1000002 /* Dependencies */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		B1000001 /* WhiteGloveApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhiteGloveApp.swift; sourceTree = "<group>"; };
+		B1000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B1000010 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		B1000020 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		B1000021 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
+		B1000022 /* DataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataProvider.swift; sourceTree = "<group>"; };
+		B1000023 /* MockDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDataProvider.swift; sourceTree = "<group>"; };
+		B1000030 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		B1000031 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		B1000032 /* VehicleListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleListView.swift; sourceTree = "<group>"; };
+		B1000033 /* VehicleDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleDetailView.swift; sourceTree = "<group>"; };
+		B1000034 /* IntakeWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntakeWizardView.swift; sourceTree = "<group>"; };
+		B1000035 /* InspectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspectionView.swift; sourceTree = "<group>"; };
+		B1000036 /* MediaCaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaCaptureView.swift; sourceTree = "<group>"; };
+		B1000037 /* ChecklistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChecklistView.swift; sourceTree = "<group>"; };
+		B1000038 /* DeliveryChecklistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryChecklistView.swift; sourceTree = "<group>"; };
+		B1000039 /* NotificationCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationCenterView.swift; sourceTree = "<group>"; };
+		B1000040 /* StatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBadge.swift; sourceTree = "<group>"; };
+		B1000041 /* ProgressStepper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressStepper.swift; sourceTree = "<group>"; };
+		B1000042 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		B1000043 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
+		B1000044 /* VehicleCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleCard.swift; sourceTree = "<group>"; };
+		B1000045 /* InspectionSectionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspectionSectionCard.swift; sourceTree = "<group>"; };
+		B1000046 /* ChecklistItemRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChecklistItemRow.swift; sourceTree = "<group>"; };
+		B1000047 /* MediaGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaGrid.swift; sourceTree = "<group>"; };
+		B1000050 /* ServiceRequestListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceRequestListView.swift; sourceTree = "<group>"; };
+		B1000051 /* ServiceRequestDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceRequestDetailView.swift; sourceTree = "<group>"; };
+		D1000001 /* WhiteGlove.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WhiteGlove.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E1000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000060 /* Supabase in Frameworks */,
+				A1000061 /* Dependencies in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		F1000001 = {
+			isa = PBXGroup;
+			children = (
+				F1000002 /* Sources */,
+				F1000099 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F1000002 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				F1000003 /* App */,
+				F1000004 /* Models */,
+				F1000005 /* Services */,
+				F1000006 /* Features */,
+				F1000007 /* Components */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		F1000003 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				B1000001 /* WhiteGloveApp.swift */,
+				B1000002 /* ContentView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		F1000004 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				B1000010 /* Models.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		F1000005 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				B1000020 /* AuthService.swift */,
+				B1000021 /* SupabaseService.swift */,
+				B1000022 /* DataProvider.swift */,
+				B1000023 /* MockDataProvider.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		F1000006 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				F1000010 /* Auth */,
+				F1000011 /* Dashboard */,
+				F1000012 /* Vehicles */,
+				F1000013 /* Intake */,
+				F1000014 /* Inspections */,
+				F1000015 /* Checklists */,
+				F1000016 /* Delivery */,
+				F1000017 /* Notifications */,
+			F1000018 /* ServiceRequests */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		F1000007 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				F1000020 /* Common */,
+				F1000021 /* Vehicle */,
+				F1000022 /* Inspection */,
+				F1000023 /* Checklist */,
+				F1000024 /* Media */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		F1000010 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				B1000030 /* LoginView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		F1000011 /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				B1000031 /* DashboardView.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		F1000012 /* Vehicles */ = {
+			isa = PBXGroup;
+			children = (
+				B1000032 /* VehicleListView.swift */,
+				B1000033 /* VehicleDetailView.swift */,
+			);
+			path = Vehicles;
+			sourceTree = "<group>";
+		};
+		F1000013 /* Intake */ = {
+			isa = PBXGroup;
+			children = (
+				B1000034 /* IntakeWizardView.swift */,
+			);
+			path = Intake;
+			sourceTree = "<group>";
+		};
+		F1000014 /* Inspections */ = {
+			isa = PBXGroup;
+			children = (
+				B1000035 /* InspectionView.swift */,
+				B1000036 /* MediaCaptureView.swift */,
+			);
+			path = Inspections;
+			sourceTree = "<group>";
+		};
+		F1000015 /* Checklists */ = {
+			isa = PBXGroup;
+			children = (
+				B1000037 /* ChecklistView.swift */,
+			);
+			path = Checklists;
+			sourceTree = "<group>";
+		};
+		F1000016 /* Delivery */ = {
+			isa = PBXGroup;
+			children = (
+				B1000038 /* DeliveryChecklistView.swift */,
+			);
+			path = Delivery;
+			sourceTree = "<group>";
+		};
+		F1000017 /* Notifications */ = {
+			isa = PBXGroup;
+			children = (
+				B1000039 /* NotificationCenterView.swift */,
+			);
+			path = Notifications;
+			sourceTree = "<group>";
+		};
+		F1000018 /* ServiceRequests */ = {
+			isa = PBXGroup;
+			children = (
+				B1000050 /* ServiceRequestListView.swift */,
+				B1000051 /* ServiceRequestDetailView.swift */,
+			);
+			path = ServiceRequests;
+			sourceTree = "<group>";
+		};
+		F1000020 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				B1000040 /* StatusBadge.swift */,
+				B1000041 /* ProgressStepper.swift */,
+				B1000042 /* EmptyStateView.swift */,
+				B1000043 /* LoadingView.swift */,
+			);
+			path = Common;
+			sourceTree = "<group>";
+		};
+		F1000021 /* Vehicle */ = {
+			isa = PBXGroup;
+			children = (
+				B1000044 /* VehicleCard.swift */,
+			);
+			path = Vehicle;
+			sourceTree = "<group>";
+		};
+		F1000022 /* Inspection */ = {
+			isa = PBXGroup;
+			children = (
+				B1000045 /* InspectionSectionCard.swift */,
+			);
+			path = Inspection;
+			sourceTree = "<group>";
+		};
+		F1000023 /* Checklist */ = {
+			isa = PBXGroup;
+			children = (
+				B1000046 /* ChecklistItemRow.swift */,
+			);
+			path = Checklist;
+			sourceTree = "<group>";
+		};
+		F1000024 /* Media */ = {
+			isa = PBXGroup;
+			children = (
+				B1000047 /* MediaGrid.swift */,
+			);
+			path = Media;
+			sourceTree = "<group>";
+		};
+		F1000099 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D1000001 /* WhiteGlove.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		T1000001 /* WhiteGlove */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = X1000003 /* Build configuration list for PBXNativeTarget "WhiteGlove" */;
+			buildPhases = (
+				E1000002 /* Sources */,
+				E1000001 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WhiteGlove;
+			packageProductDependencies = (
+				C1000001 /* Supabase */,
+				C1000002 /* Dependencies */,
+			);
+			productName = WhiteGlove;
+			productReference = D1000001 /* WhiteGlove.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		P1000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					T1000001 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = X1000001 /* Build configuration list for PBXProject "WhiteGlove" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = F1000001;
+			packageReferences = (
+				R1000001 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				R1000002 /* XCRemoteSwiftPackageReference "swift-dependencies" */,
+			);
+			productRefGroup = F1000099 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				T1000001 /* WhiteGlove */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E1000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000001 /* WhiteGloveApp.swift in Sources */,
+				A1000002 /* ContentView.swift in Sources */,
+				A1000010 /* Models.swift in Sources */,
+				A1000020 /* AuthService.swift in Sources */,
+				A1000021 /* SupabaseService.swift in Sources */,
+				A1000022 /* DataProvider.swift in Sources */,
+				A1000023 /* MockDataProvider.swift in Sources */,
+				A1000030 /* LoginView.swift in Sources */,
+				A1000031 /* DashboardView.swift in Sources */,
+				A1000032 /* VehicleListView.swift in Sources */,
+				A1000033 /* VehicleDetailView.swift in Sources */,
+				A1000034 /* IntakeWizardView.swift in Sources */,
+				A1000035 /* InspectionView.swift in Sources */,
+				A1000036 /* MediaCaptureView.swift in Sources */,
+				A1000037 /* ChecklistView.swift in Sources */,
+				A1000038 /* DeliveryChecklistView.swift in Sources */,
+				A1000039 /* NotificationCenterView.swift in Sources */,
+				A1000040 /* StatusBadge.swift in Sources */,
+				A1000041 /* ProgressStepper.swift in Sources */,
+				A1000042 /* EmptyStateView.swift in Sources */,
+				A1000043 /* LoadingView.swift in Sources */,
+				A1000044 /* VehicleCard.swift in Sources */,
+				A1000045 /* InspectionSectionCard.swift in Sources */,
+				A1000046 /* ChecklistItemRow.swift in Sources */,
+				A1000047 /* MediaGrid.swift in Sources */,
+				A1000050 /* ServiceRequestListView.swift in Sources */,
+				A1000051 /* ServiceRequestDetailView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		X1000010 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		X1000011 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		X1000020 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = MJ4QU4JD9F;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "White Glove";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				INFOPLIST_KEY_NSCameraUsageDescription = "White Glove needs camera access to capture inspection photos.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "White Glove needs photo library access to attach inspection photos.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.whiteglove.autoservice;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		X1000021 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = MJ4QU4JD9F;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "White Glove";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				INFOPLIST_KEY_NSCameraUsageDescription = "White Glove needs camera access to capture inspection photos.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "White Glove needs photo library access to attach inspection photos.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.whiteglove.autoservice;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		X1000001 /* Build configuration list for PBXProject "WhiteGlove" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				X1000010 /* Debug */,
+				X1000011 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		X1000003 /* Build configuration list for PBXNativeTarget "WhiteGlove" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				X1000020 /* Debug */,
+				X1000021 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		R1000001 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+		R1000002 /* XCRemoteSwiftPackageReference "swift-dependencies" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-dependencies";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C1000001 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = R1000001 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+		C1000002 /* Dependencies */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = R1000002 /* XCRemoteSwiftPackageReference "swift-dependencies" */;
+			productName = Dependencies;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = P1000001 /* Project object */;
+}

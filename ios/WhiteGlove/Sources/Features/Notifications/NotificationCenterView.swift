@@ -10,9 +10,13 @@ struct NotificationCenterView: View {
 
     private var filteredNotifications: [Notification] {
         switch selectedTab {
-        case 1: return notifications.filter { !$0.isRead }
-        case 2: return notifications.filter { $0.type == .update || $0.type == .completion }
-        case 3: return notifications.filter { $0.type == .alert || $0.type == .approval }
+        case 1: return notifications.filter { !$0.read }
+        case 2: return notifications.filter {
+            [.intakeStarted, .intakeCompleted, .serviceStarted, .serviceCompleted, .vehicleDelivered].contains($0.type)
+        }
+        case 3: return notifications.filter {
+            [.issueFlagged, .approvalNeeded, .approvalReceived].contains($0.type)
+        }
         default: return notifications
         }
     }
@@ -20,7 +24,6 @@ struct NotificationCenterView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Tab Selector
                 HStack(spacing: 0) {
                     ForEach(Array(tabs.enumerated()), id: \.offset) { index, tab in
                         Button {
@@ -94,19 +97,22 @@ private struct NotificationRow: View {
 
     private var iconName: String {
         switch notification.type {
-        case .update: return "arrow.triangle.2.circlepath"
-        case .alert: return "exclamationmark.triangle.fill"
-        case .approval: return "hand.thumbsup.fill"
-        case .completion: return "checkmark.seal.fill"
+        case .intakeStarted, .intakeCompleted: return "arrow.triangle.2.circlepath"
+        case .issueFlagged: return "exclamationmark.triangle.fill"
+        case .approvalNeeded, .approvalReceived: return "hand.thumbsup.fill"
+        case .serviceStarted, .serviceCompleted: return "wrench.and.screwdriver.fill"
+        case .deliveryReady, .vehicleDelivered: return "checkmark.seal.fill"
+        case .reportReady: return "doc.text.fill"
         }
     }
 
     private var iconColor: Color {
         switch notification.type {
-        case .update: return Theme.blueColor
-        case .alert: return Theme.alertColor
-        case .approval: return .orange
-        case .completion: return Theme.greenColor
+        case .intakeStarted, .intakeCompleted, .serviceStarted: return Theme.blueColor
+        case .issueFlagged: return Theme.alertColor
+        case .approvalNeeded, .approvalReceived: return .orange
+        case .serviceCompleted, .deliveryReady, .vehicleDelivered: return Theme.greenColor
+        case .reportReady: return Theme.text2Color
         }
     }
 
@@ -125,9 +131,9 @@ private struct NotificationRow: View {
                 HStack {
                     Text(notification.title)
                         .font(.subheadline.weight(.semibold))
-                        .foregroundColor(notification.isRead ? Theme.text2Color : Theme.textColor)
+                        .foregroundColor(notification.read ? Theme.text2Color : Theme.textColor)
                     Spacer()
-                    if !notification.isRead {
+                    if !notification.read {
                         Circle()
                             .fill(Theme.goldColor)
                             .frame(width: 8, height: 8)
@@ -145,11 +151,11 @@ private struct NotificationRow: View {
             }
         }
         .padding()
-        .background(notification.isRead ? Theme.cardColor : Theme.cardColor.opacity(0.8))
+        .background(notification.read ? Theme.cardColor : Theme.cardColor.opacity(0.8))
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(notification.isRead ? Theme.borderColor : Theme.goldColor.opacity(0.2), lineWidth: 1)
+                .stroke(notification.read ? Theme.borderColor : Theme.goldColor.opacity(0.2), lineWidth: 1)
         )
     }
 }

@@ -32,6 +32,9 @@ ios/WhiteGlove/.build/
 ios/WhiteGlove/DerivedData/
 *.xcuserdata
 *.xcworkspace/xcuserdata/
+*.xcuserstate
+*.xcschememanagement.plist
+ios/WhiteGlove/.swiftpm/
 
 # Turbo
 .turbo/

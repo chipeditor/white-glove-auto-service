@@ -1,20 +1,20 @@
 import SwiftUI
 
 struct ChecklistItemRow: View {
-    let item: MockChecklistItem
+    let item: ChecklistItem
     var onToggle: () -> Void
 
     var body: some View {
         Button(action: onToggle) {
             HStack(spacing: 14) {
-                Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
+                Image(systemName: item.completed ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundColor(item.isCompleted ? .green : .secondary)
+                    .foregroundColor(item.completed ? .green : .secondary)
 
                 Text(item.label)
                     .font(.subheadline)
-                    .foregroundColor(item.isCompleted ? .secondary : .white)
-                    .strikethrough(item.isCompleted, color: .secondary)
+                    .foregroundColor(item.completed ? .secondary : .white)
+                    .strikethrough(item.completed, color: .secondary)
 
                 Spacer()
             }
@@ -24,13 +24,4 @@ struct ChecklistItemRow: View {
         }
         .buttonStyle(.plain)
     }
-}
-
-#Preview {
-    VStack(spacing: 8) {
-        ChecklistItemRow(item: .init(label: "Exterior wash completed", isCompleted: true)) {}
-        ChecklistItemRow(item: .init(label: "Interior vacuum and wipe down", isCompleted: false)) {}
-    }
-    .padding()
-    .background(Theme.bgColor)
 }

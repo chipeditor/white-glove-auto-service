@@ -1,29 +1,29 @@
 import SwiftUI
 
 struct ChecklistView: View {
-    let title: String
-    @State private var items: [MockChecklistItem]
+    let vehicleId: UUID
+    @EnvironmentObject var authService: AuthService
+    @State private var checklists: [Checklist] = []
+    @State private var isLoading = true
 
-    init(title: String = "Service Checklist", items: [MockChecklistItem] = MockChecklistItem.sampleItems) {
-        self.title = title
-        self._items = State(initialValue: items)
+    private var allItems: [ChecklistItem] {
+        checklists.flatMap { $0.items ?? [] }
     }
 
     private var completedCount: Int {
-        items.filter(\.isCompleted).count
+        allItems.filter(\.completed).count
     }
 
     private var progress: Double {
-        guard !items.isEmpty else { return 0 }
-        return Double(completedCount) / Double(items.count)
+        guard !allItems.isEmpty else { return 0 }
+        return Double(completedCount) / Double(allItems.count)
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            // Progress Header
             VStack(spacing: 12) {
                 HStack {
-                    Text("\(completedCount) of \(items.count) completed")
+                    Text("\(completedCount) of \(allItems.count) completed")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     Spacer()
@@ -39,50 +39,50 @@ struct ChecklistView: View {
             .padding()
             .background(Theme.cardColor)
 
-            // Checklist Items
-            ScrollView {
-                LazyVStack(spacing: 8) {
-                    ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                        ChecklistItemRow(item: item) {
-                            withAnimation(.spring(response: 0.3)) {
-                                items[index].isCompleted.toggle()
+            if isLoading {
+                LoadingView()
+            } else if checklists.isEmpty {
+                EmptyStateView(icon: "checklist", title: "No Checklists", message: "No checklists have been created for this vehicle yet.")
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 16) {
+                        ForEach(checklists) { checklist in
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(checklist.title)
+                                    .font(.headline)
+                                    .padding(.horizontal)
+
+                                ForEach(checklist.items ?? []) { item in
+                                    ChecklistItemRow(item: item) {
+                                        Task { await toggleItem(item) }
+                                    }
+                                }
                             }
                         }
                     }
+                    .padding()
                 }
-                .padding()
             }
         }
         .background(Theme.bgColor.ignoresSafeArea())
-        .navigationTitle(title)
+        .navigationTitle("Checklists")
+        .task { await loadChecklists() }
     }
-}
 
-// MARK: - Mock Data
+    private func loadChecklists() async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            checklists = try await authService.dataProvider.fetchChecklists(vehicleId: vehicleId)
+        } catch {
+            checklists = []
+        }
+    }
 
-struct MockChecklistItem: Identifiable {
-    let id = UUID()
-    let label: String
-    var isCompleted: Bool
-
-    static let sampleItems: [MockChecklistItem] = [
-        .init(label: "Exterior wash completed", isCompleted: true),
-        .init(label: "Interior vacuum and wipe down", isCompleted: true),
-        .init(label: "All fluids topped off", isCompleted: true),
-        .init(label: "Tire pressure checked and adjusted", isCompleted: false),
-        .init(label: "Battery tested", isCompleted: false),
-        .init(label: "Brake inspection", isCompleted: false),
-        .init(label: "Alignment check", isCompleted: false),
-        .init(label: "A/C system tested", isCompleted: false),
-        .init(label: "All lights functioning", isCompleted: false),
-        .init(label: "Windshield wipers replaced if needed", isCompleted: false),
-        .init(label: "Final quality review", isCompleted: false),
-        .init(label: "Customer notification sent", isCompleted: false),
-    ]
-}
-
-#Preview {
-    NavigationStack {
-        ChecklistView()
+    private func toggleItem(_ item: ChecklistItem) async {
+        do {
+            try await authService.dataProvider.updateChecklistItem(id: item.id, completed: !item.completed)
+            await loadChecklists()
+        } catch {}
     }
 }

@@ -73,6 +73,27 @@ final class SupabaseService: DataProvider {
         return try JSONDecoder.supabase.decode(Vehicle.self, from: data)
     }
 
+    func fetchVehiclesForCustomer(email: String) async throws -> [Vehicle] {
+        // Get customer by email, then fetch their vehicles
+        let custData = try await client
+            .from("customers")
+            .select()
+            .eq("email", value: email)
+            .limit(1)
+            .execute()
+            .value as Data
+        let customers = try JSONDecoder.supabase.decode([Customer].self, from: custData)
+        guard let customer = customers.first else { return [] }
+        let data = try await client
+            .from("vehicles")
+            .select()
+            .eq("customer_id", value: customer.id.uuidString)
+            .order("updated_at", ascending: false)
+            .execute()
+            .value as Data
+        return try JSONDecoder.supabase.decode([Vehicle].self, from: data)
+    }
+
     func createVehicle(_ vehicle: Vehicle) async throws -> Vehicle {
         let data = try await client
             .from("vehicles")
@@ -186,6 +207,88 @@ final class SupabaseService: DataProvider {
         return try JSONDecoder.supabase.decode([InspectionSection].self, from: data)
     }
 
+    func updateInspectionItem(id: UUID, passed: Bool?, notes: String?) async throws {
+        var updates: [String: String] = [
+            "updated_at": ISO8601DateFormatter().string(from: Date()),
+        ]
+        if let passed {
+            updates["passed"] = passed ? "true" : "false"
+        }
+        if let notes {
+            updates["notes"] = notes
+        }
+        try await client
+            .from("inspection_items")
+            .update(updates)
+            .eq("id", value: id.uuidString)
+            .execute()
+    }
+
+    func updateInspectionStatus(id: UUID, status: InspectionStatus) async throws {
+        var updates: [String: String] = [
+            "status": status.rawValue,
+            "updated_at": ISO8601DateFormatter().string(from: Date()),
+        ]
+        if status == .completed {
+            updates["completed_at"] = ISO8601DateFormatter().string(from: Date())
+        }
+        try await client
+            .from("inspections")
+            .update(updates)
+            .eq("id", value: id.uuidString)
+            .execute()
+    }
+
+    // MARK: - Media
+
+    func uploadPhoto(imageData: Data, vehicleId: UUID, inspectionId: UUID?, inspectionItemId: UUID?, organizationId: UUID) async throws -> MediaAsset {
+        let fileName = "\(UUID().uuidString).jpg"
+        let path = "\(organizationId.uuidString)/\(vehicleId.uuidString)/\(fileName)"
+
+        try await client.storage
+            .from("vehicle-media")
+            .upload(path, data: imageData, options: .init(contentType: "image/jpeg"))
+
+        let publicURL = try client.storage
+            .from("vehicle-media")
+            .getPublicURL(path: path)
+
+        let session = try await client.auth.session
+        let insertPayload: [String: String?] = [
+            "organization_id": organizationId.uuidString,
+            "vehicle_id": vehicleId.uuidString,
+            "inspection_id": inspectionId?.uuidString,
+            "inspection_item_id": inspectionItemId?.uuidString,
+            "uploaded_by": session.user.id.uuidString,
+            "type": "photo",
+            "storage_path": path,
+            "url": publicURL.absoluteString,
+            "file_name": fileName,
+            "file_size": "\(imageData.count)",
+            "mime_type": "image/jpeg",
+        ]
+
+        let data = try await client
+            .from("media_assets")
+            .insert(insertPayload.compactMapValues { $0 })
+            .select()
+            .single()
+            .execute()
+            .value as Data
+        return try JSONDecoder.supabase.decode(MediaAsset.self, from: data)
+    }
+
+    func fetchMediaAssets(vehicleId: UUID) async throws -> [MediaAsset] {
+        let data = try await client
+            .from("media_assets")
+            .select()
+            .eq("vehicle_id", value: vehicleId.uuidString)
+            .order("created_at", ascending: false)
+            .execute()
+            .value as Data
+        return try JSONDecoder.supabase.decode([MediaAsset].self, from: data)
+    }
+
     // MARK: - Checklists
 
     func fetchChecklists(vehicleId: UUID) async throws -> [Checklist] {
@@ -241,7 +344,6 @@ final class SupabaseService: DataProvider {
 extension JSONDecoder {
     static let supabase: JSONDecoder = {
         let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         decoder.dateDecodingStrategy = .custom { decoder in

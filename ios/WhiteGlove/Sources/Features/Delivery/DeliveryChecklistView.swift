@@ -2,24 +2,29 @@ import SwiftUI
 
 struct DeliveryChecklistView: View {
     let vehicle: Vehicle
-    @State private var items: [MockChecklistItem] = MockChecklistItem.deliveryItems
+    @EnvironmentObject var authService: AuthService
+    @State private var checklists: [Checklist] = []
+    @State private var isLoading = true
+
+    private var allItems: [ChecklistItem] {
+        checklists.flatMap { $0.items ?? [] }
+    }
 
     private var completedCount: Int {
-        items.filter(\.isCompleted).count
+        allItems.filter(\.completed).count
     }
 
     private var progress: Double {
-        guard !items.isEmpty else { return 0 }
-        return Double(completedCount) / Double(items.count)
+        guard !allItems.isEmpty else { return 0 }
+        return Double(completedCount) / Double(allItems.count)
     }
 
     private var isReadyForDelivery: Bool {
-        progress == 1.0
+        !allItems.isEmpty && progress == 1.0
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            // Vehicle Header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(vehicle.displayName)
@@ -36,7 +41,6 @@ struct DeliveryChecklistView: View {
             .padding()
             .background(Theme.cardColor)
 
-            // Progress
             VStack(spacing: 12) {
                 HStack {
                     Image(systemName: isReadyForDelivery ? "checkmark.seal.fill" : "clock.fill")
@@ -44,7 +48,7 @@ struct DeliveryChecklistView: View {
                     Text(isReadyForDelivery ? "Ready for Delivery" : "Pre-Delivery Checklist")
                         .font(.subheadline.weight(.semibold))
                     Spacer()
-                    Text("\(completedCount)/\(items.count)")
+                    Text("\(completedCount)/\(allItems.count)")
                         .font(.caption.weight(.bold))
                         .foregroundColor(.secondary)
                 }
@@ -56,24 +60,26 @@ struct DeliveryChecklistView: View {
             .padding()
             .background(Theme.cardColor.opacity(0.5))
 
-            // Checklist
-            ScrollView {
-                LazyVStack(spacing: 8) {
-                    ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                        ChecklistItemRow(item: item) {
-                            withAnimation(.spring(response: 0.3)) {
-                                items[index].isCompleted.toggle()
+            if isLoading {
+                LoadingView()
+            } else if allItems.isEmpty {
+                EmptyStateView(icon: "checklist", title: "No Checklist", message: "No delivery checklist has been created for this vehicle yet.")
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 8) {
+                        ForEach(allItems) { item in
+                            ChecklistItemRow(item: item) {
+                                Task { await toggleItem(item) }
                             }
                         }
                     }
+                    .padding()
                 }
-                .padding()
             }
 
-            // Deliver Button
             if isReadyForDelivery {
                 Button {
-                    // Mark as delivered
+                    Task { await markDelivered() }
                 } label: {
                     HStack {
                         Image(systemName: "hand.thumbsup.fill")
@@ -92,26 +98,30 @@ struct DeliveryChecklistView: View {
         .background(Theme.bgColor.ignoresSafeArea())
         .navigationTitle("Delivery")
         .navigationBarTitleDisplayMode(.inline)
+        .task { await loadChecklists() }
     }
-}
 
-extension MockChecklistItem {
-    static let deliveryItems: [MockChecklistItem] = [
-        .init(label: "Final exterior wash and dry", isCompleted: false),
-        .init(label: "Interior detail and vacuum", isCompleted: false),
-        .init(label: "Glass cleaned inside and out", isCompleted: false),
-        .init(label: "Tire dressing applied", isCompleted: false),
-        .init(label: "All personal items returned", isCompleted: false),
-        .init(label: "Paperwork prepared", isCompleted: false),
-        .init(label: "Keys and fobs accounted for", isCompleted: false),
-        .init(label: "Walk-around photos taken", isCompleted: false),
-        .init(label: "Customer notified of pickup time", isCompleted: false),
-        .init(label: "Final quality sign-off", isCompleted: false),
-    ]
-}
+    private func loadChecklists() async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let all = try await authService.dataProvider.fetchChecklists(vehicleId: vehicle.id)
+            checklists = all.filter { $0.type == "delivery" }
+        } catch {
+            checklists = []
+        }
+    }
 
-#Preview {
-    NavigationStack {
-        DeliveryChecklistView(vehicle: MockDataProvider.shared.vehicles[1])
+    private func toggleItem(_ item: ChecklistItem) async {
+        do {
+            try await authService.dataProvider.updateChecklistItem(id: item.id, completed: !item.completed)
+            await loadChecklists()
+        } catch {}
+    }
+
+    private func markDelivered() async {
+        do {
+            try await authService.dataProvider.updateVehicleStatus(id: vehicle.id, status: .delivered)
+        } catch {}
     }
 }

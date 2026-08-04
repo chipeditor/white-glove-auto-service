@@ -142,7 +142,7 @@ struct IntakeWizardView: View {
                         .font(.subheadline.weight(.medium))
                         .foregroundColor(.secondary)
 
-                    ForEach([InspectionType.intake, .damage, .preDelivery], id: \.self) { type in
+                    ForEach([InspectionType.intake, .cosmetic, .mechanical], id: \.self) { type in
                         Button {
                             selectedInspectionType = type
                         } label: {

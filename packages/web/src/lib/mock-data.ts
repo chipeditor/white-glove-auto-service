@@ -221,6 +221,7 @@ export const MOCK_SERVICE_REQUESTS: ServiceRequest[] = [
     vehicle_id: 'd0000000-0000-0000-0000-000000000001',
     customer_id: 'c0000000-0000-0000-0000-000000000001',
     advisor_id: 'b0000000-0000-0000-0000-000000000002',
+    technician_id: null,
     title: 'Performance inspection and delivery verification',
     description:
       'Full performance inspection including engine, brakes, suspension, and delivery prep for customer pickup.',
@@ -228,6 +229,10 @@ export const MOCK_SERVICE_REQUESTS: ServiceRequest[] = [
     priority: 1,
     estimated_completion: null,
     actual_completion: null,
+    subtotal: 0,
+    tax_rate: 0,
+    tax_amount: 0,
+    total: 0,
     created_at: AGO(2880),
     updated_at: AGO(2),
   },

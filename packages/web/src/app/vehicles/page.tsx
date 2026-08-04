@@ -1,19 +1,20 @@
-'use client';
-
+import Link from 'next/link';
 import { Plus, Search } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { VehicleTable } from '@/components/vehicle/VehicleCard';
-import { MOCK_VEHICLES_WITH_CUSTOMERS } from '@/lib/mock-data';
+import { fetchVehicles } from '@/lib/queries';
 
-export default function VehiclesPage() {
+export default async function VehiclesPage() {
+  const vehicles = await fetchVehicles();
+
   return (
     <AppShell>
       <div className="p-8">
         <PageHeader
           title="Vehicles"
-          subtitle={`${MOCK_VEHICLES_WITH_CUSTOMERS.length} vehicles in system`}
+          subtitle={`${vehicles.length} vehicles in system`}
           actions={
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -24,10 +25,12 @@ export default function VehiclesPage() {
                   className="bg-wg-input border border-wg-border rounded-lg pl-9 pr-4 py-2 text-sm text-wg-text placeholder:text-wg-muted focus:outline-none focus:border-wg-blue/50 w-64"
                 />
               </div>
-              <Button>
-                <Plus size={16} />
-                New Vehicle
-              </Button>
+              <Link href="/intake/new">
+                <Button>
+                  <Plus size={16} />
+                  New Vehicle
+                </Button>
+              </Link>
             </div>
           }
         />
@@ -47,7 +50,7 @@ export default function VehiclesPage() {
           ))}
         </div>
 
-        <VehicleTable vehicles={MOCK_VEHICLES_WITH_CUSTOMERS} />
+        <VehicleTable vehicles={vehicles} />
       </div>
     </AppShell>
   );

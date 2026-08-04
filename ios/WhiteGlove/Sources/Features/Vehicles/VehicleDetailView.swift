@@ -2,13 +2,16 @@ import SwiftUI
 
 struct VehicleDetailView: View {
     let vehicle: Vehicle
+    @EnvironmentObject var authService: AuthService
     @State private var selectedTab = 0
+    @State private var inspections: [Inspection] = []
+    @State private var serviceRequests: [ServiceRequest] = []
+    @State private var mediaAssets: [MediaAsset] = []
 
-    private let tabs = ["Overview", "Intake", "Inspections", "Service", "Checklists", "Files", "History"]
+    private let tabs = ["Overview", "Inspections", "Service", "Checklists", "Delivery", "Files", "History"]
 
     var body: some View {
         VStack(spacing: 0) {
-            // Vehicle Header
             VStack(spacing: 12) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
@@ -45,7 +48,6 @@ struct VehicleDetailView: View {
             .padding()
             .background(Theme.cardColor)
 
-            // Tab Selector
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 0) {
                     ForEach(Array(tabs.enumerated()), id: \.offset) { index, tab in
@@ -68,20 +70,35 @@ struct VehicleDetailView: View {
             }
             .background(Theme.cardColor)
 
-            // Tab Content
-            TabView(selection: $selectedTab) {
-                OverviewTab(vehicle: vehicle).tag(0)
-                IntakeTab().tag(1)
-                InspectionsTab().tag(2)
-                ServiceTab().tag(3)
-                ChecklistsTab().tag(4)
-                FilesTab().tag(5)
-                HistoryTab().tag(6)
+            Group {
+                switch selectedTab {
+                case 0: OverviewTab(vehicle: vehicle, onRefresh: loadData)
+                case 1: InspectionsTab(inspections: inspections, vehicleId: vehicle.id, organizationId: vehicle.organizationId, onRefresh: loadData)
+                case 2: ServiceTab(serviceRequests: serviceRequests, onRefresh: loadData)
+                case 3: ChecklistView(vehicleId: vehicle.id)
+                case 4: DeliveryChecklistView(vehicle: vehicle)
+                case 5: FilesTab(mediaAssets: mediaAssets, onRefresh: loadData)
+                case 6: HistoryTab()
+                default: OverviewTab(vehicle: vehicle, onRefresh: loadData)
+                }
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(maxHeight: .infinity)
         }
         .background(Theme.bgColor.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
+        .task { await loadData() }
+    }
+
+    private func loadData() async {
+        do {
+            async let i = authService.dataProvider.fetchInspections(vehicleId: vehicle.id)
+            async let s = authService.dataProvider.fetchServiceRequests(organizationId: vehicle.organizationId)
+            async let m = authService.dataProvider.fetchMediaAssets(vehicleId: vehicle.id)
+            inspections = try await i
+            let allRequests = try await s
+            serviceRequests = allRequests.filter { $0.vehicleId == vehicle.id }
+            mediaAssets = try await m
+        } catch {}
     }
 }
 
@@ -89,6 +106,7 @@ struct VehicleDetailView: View {
 
 private struct OverviewTab: View {
     let vehicle: Vehicle
+    let onRefresh: () async -> Void
 
     var body: some View {
         ScrollView {
@@ -117,6 +135,7 @@ private struct OverviewTab: View {
             }
             .padding()
         }
+        .refreshable { await onRefresh() }
     }
 }
 
@@ -138,53 +157,162 @@ private struct InfoRow: View {
     }
 }
 
-private struct IntakeTab: View {
-    var body: some View {
-        EmptyStateView(icon: "doc.text.fill", title: "Intake Details", message: "Intake information will appear here.")
-    }
-}
-
 private struct InspectionsTab: View {
+    let inspections: [Inspection]
+    let vehicleId: UUID
+    let organizationId: UUID
+    let onRefresh: () async -> Void
+
     var body: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                InspectionSectionCard(name: "Exterior", itemCount: 12, completedCount: 8, status: .inProgress)
-                InspectionSectionCard(name: "Interior", itemCount: 10, completedCount: 10, status: .completed)
-                InspectionSectionCard(name: "Engine Bay", itemCount: 8, completedCount: 0, status: .pending)
-                InspectionSectionCard(name: "Wheels & Tires", itemCount: 6, completedCount: 0, status: .pending)
-                InspectionSectionCard(name: "Glass & Lights", itemCount: 5, completedCount: 0, status: .pending)
+        if inspections.isEmpty {
+            EmptyStateView(icon: "doc.text.fill", title: "No Inspections", message: "No inspections have been created for this vehicle.")
+        } else {
+            ScrollView {
+                VStack(spacing: 12) {
+                    ForEach(inspections) { inspection in
+                        NavigationLink {
+                            InspectionView(inspectionId: inspection.id, vehicleId: vehicleId, organizationId: organizationId)
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(inspection.type.rawValue.capitalized.replacingOccurrences(of: "_", with: " "))
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundColor(.white)
+                                    Text(inspection.createdAt.formatted(date: .abbreviated, time: .omitted))
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                Text(inspection.status.rawValue.capitalized.replacingOccurrences(of: "_", with: " "))
+                                    .font(.caption2.weight(.bold))
+                                    .textCase(.uppercase)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .background(inspectionStatusColor(inspection.status).opacity(0.15))
+                                    .foregroundColor(inspectionStatusColor(inspection.status))
+                                    .cornerRadius(6)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding()
+                            .background(Theme.cardColor)
+                            .cornerRadius(12)
+                        }
+                    }
+                }
+                .padding()
             }
-            .padding()
+            .refreshable { await onRefresh() }
+        }
+    }
+
+    private func inspectionStatusColor(_ status: InspectionStatus) -> Color {
+        switch status {
+        case .notStarted: return .secondary
+        case .inProgress: return .orange
+        case .completed, .signedOff: return .green
+        case .needsAttention: return .red
         }
     }
 }
 
 private struct ServiceTab: View {
-    var body: some View {
-        EmptyStateView(icon: "wrench.and.screwdriver.fill", title: "Service Requests", message: "Service request details will appear here.")
-    }
-}
+    let serviceRequests: [ServiceRequest]
+    let onRefresh: () async -> Void
 
-private struct ChecklistsTab: View {
     var body: some View {
-        EmptyStateView(icon: "checklist", title: "Checklists", message: "Vehicle checklists will appear here.")
+        if serviceRequests.isEmpty {
+            EmptyStateView(icon: "wrench.and.screwdriver.fill", title: "No Service Requests", message: "No service requests for this vehicle.")
+        } else {
+            ScrollView {
+                VStack(spacing: 12) {
+                    ForEach(serviceRequests) { request in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(request.title)
+                                    .font(.subheadline.weight(.semibold))
+                                if let desc = request.description {
+                                    Text(desc)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(2)
+                                }
+                            }
+                            Spacer()
+                            ServiceStatusBadge(status: request.status)
+                        }
+                        .padding()
+                        .background(Theme.cardColor)
+                        .cornerRadius(12)
+                    }
+                }
+                .padding()
+            }
+            .refreshable { await onRefresh() }
+        }
     }
 }
 
 private struct FilesTab: View {
+    let mediaAssets: [MediaAsset]
+    let onRefresh: () async -> Void
+
+    private let columns = [
+        GridItem(.flexible(), spacing: 8),
+        GridItem(.flexible(), spacing: 8),
+        GridItem(.flexible(), spacing: 8),
+    ]
+
     var body: some View {
-        EmptyStateView(icon: "photo.on.rectangle.angled", title: "Files & Media", message: "Photos and documents will appear here.")
+        if mediaAssets.isEmpty {
+            EmptyStateView(icon: "photo.on.rectangle.angled", title: "No Files", message: "Photos and documents will appear here after upload.")
+        } else {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("\(mediaAssets.count) file\(mediaAssets.count == 1 ? "" : "s")")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    LazyVGrid(columns: columns, spacing: 8) {
+                        ForEach(mediaAssets) { asset in
+                            AsyncImage(url: URL(string: asset.url)) { phase in
+                                switch phase {
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .aspectRatio(1, contentMode: .fill)
+                                        .clipped()
+                                case .failure:
+                                    Rectangle()
+                                        .fill(Theme.cardColor)
+                                        .aspectRatio(1, contentMode: .fit)
+                                        .overlay {
+                                            Image(systemName: "exclamationmark.triangle")
+                                                .foregroundColor(.secondary)
+                                        }
+                                default:
+                                    Rectangle()
+                                        .fill(Theme.cardColor)
+                                        .aspectRatio(1, contentMode: .fit)
+                                        .overlay {
+                                            ProgressView()
+                                        }
+                                }
+                            }
+                            .cornerRadius(8)
+                        }
+                    }
+                }
+                .padding()
+            }
+            .refreshable { await onRefresh() }
+        }
     }
 }
 
 private struct HistoryTab: View {
     var body: some View {
         EmptyStateView(icon: "clock.fill", title: "History", message: "Vehicle activity history will appear here.")
-    }
-}
-
-#Preview {
-    NavigationStack {
-        VehicleDetailView(vehicle: MockDataProvider.shared.vehicles[0])
     }
 }

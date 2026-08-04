@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { clsx } from 'clsx';
 import {
   LayoutDashboard,
@@ -16,45 +16,79 @@ import {
   Settings,
   LogOut,
 } from 'lucide-react';
+import { useAuth } from '@/lib/auth-context';
+import { createClient } from '@/lib/supabase';
 
-const NAV_ITEMS = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  roles?: string[];
+};
+
+const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/vehicles', label: 'Vehicles', icon: Car },
-  { href: '/service-requests', label: 'Service Requests', icon: ClipboardList },
-  { href: '/inspections', label: 'Inspections', icon: Search },
-  { href: '/checklists', label: 'Checklists', icon: CheckSquare },
-  { href: '/customers', label: 'Customers', icon: Users },
-  { href: '/reports', label: 'Reports', icon: BarChart3 },
+  { href: '/vehicles', label: 'Vehicles', icon: Car, roles: ['super_admin', 'shop_admin', 'service_advisor', 'technician', 'delivery_specialist'] },
+  { href: '/service-requests', label: 'Service Requests', icon: ClipboardList, roles: ['super_admin', 'shop_admin', 'service_advisor', 'technician'] },
+  { href: '/inspections', label: 'Inspections', icon: Search, roles: ['super_admin', 'shop_admin', 'service_advisor', 'technician'] },
+  { href: '/checklists', label: 'Checklists', icon: CheckSquare, roles: ['super_admin', 'shop_admin', 'service_advisor', 'technician', 'delivery_specialist'] },
+  { href: '/customers', label: 'Customers', icon: Users, roles: ['super_admin', 'shop_admin', 'service_advisor'] },
+  { href: '/reports', label: 'Reports', icon: BarChart3, roles: ['super_admin', 'shop_admin'] },
 ];
 
 const BOTTOM_ITEMS = [
-  { href: '/notifications', label: 'Notifications', icon: Bell, badge: 8 },
+  { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/settings/organization', label: 'Settings', icon: Settings },
 ];
 
+const ROLE_LABELS: Record<string, string> = {
+  super_admin: 'Super Admin',
+  shop_admin: 'Shop Admin',
+  service_advisor: 'Service Advisor',
+  technician: 'Technician',
+  delivery_specialist: 'Delivery Specialist',
+  customer: 'Customer',
+};
+
+function getInitials(name: string | undefined | null): string {
+  if (!name) return '??';
+  return name
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
+
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { profile, role } = useAuth();
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+    router.refresh();
+  }
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[260px] bg-wg-bg2 border-r border-wg-border flex flex-col z-40">
-      <div className="p-6 pb-4">
-        <Link href="/dashboard" className="flex items-center gap-3">
+      <div className="p-4 pb-3">
+        <Link href="/dashboard" className="block">
           <Image
-            src="/logo.svg"
-            alt="White Glove Auto Service"
-            width={40}
-            height={40}
-            className="rounded-lg"
+            src="/KSB_WhiteGlove.png"
+            alt="KSB White Glove Service"
+            width={220}
+            height={88}
+            className="w-full h-auto"
+            priority
           />
-          <div>
-            <div className="text-sm font-bold text-[#c8a45c] tracking-wide">WHITE GLOVE</div>
-            <div className="text-xs text-[#c8a45c]/60 tracking-wider">AUTO SERVICE</div>
-          </div>
         </Link>
       </div>
 
       <nav className="flex-1 px-3 space-y-0.5">
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.filter((item) => !item.roles || (role && item.roles.includes(role))).map((item) => {
           const active = pathname.startsWith(item.href);
           return (
             <Link
@@ -90,11 +124,6 @@ export function Sidebar() {
             >
               <item.icon size={18} />
               <span>{item.label}</span>
-              {'badge' in item && item.badge && (
-                <span className="ml-auto bg-wg-blue text-white text-xs font-medium px-2 py-0.5 rounded-full">
-                  {item.badge}
-                </span>
-              )}
             </Link>
           );
         })}
@@ -103,13 +132,20 @@ export function Sidebar() {
       <div className="px-3 py-4 border-t border-wg-border">
         <div className="flex items-center gap-3 px-3">
           <div className="w-8 h-8 rounded-full bg-wg-card flex items-center justify-center text-xs font-medium text-wg-text2">
-            JS
+            {getInitials(profile?.full_name)}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-wg-text truncate">John Smith</div>
-            <div className="text-xs text-wg-muted">Shop Admin</div>
+            <div className="text-sm font-medium text-wg-text truncate">
+              {profile?.full_name ?? 'Loading…'}
+            </div>
+            <div className="text-xs text-wg-muted">
+              {role ? ROLE_LABELS[role] ?? role : ''}
+            </div>
           </div>
-          <button className="text-wg-muted hover:text-wg-text transition-colors">
+          <button
+            onClick={handleLogout}
+            className="text-wg-muted hover:text-wg-text transition-colors"
+          >
             <LogOut size={16} />
           </button>
         </div>

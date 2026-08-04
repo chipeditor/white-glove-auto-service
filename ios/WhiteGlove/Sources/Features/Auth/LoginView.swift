@@ -50,6 +50,7 @@ struct LoginView: View {
                             TextField("Email", text: $email)
                                 .textContentType(.emailAddress)
                                 .autocapitalization(.none)
+                                .autocorrectionDisabled()
                                 .keyboardType(.emailAddress)
                                 .foregroundColor(.white)
                         }
@@ -103,9 +104,30 @@ struct LoginView: View {
                     .disabled(email.isEmpty || password.isEmpty || authService.isLoading)
                     .opacity(email.isEmpty || password.isEmpty ? 0.5 : 1.0)
 
-                    Text("Demo: john@whiteglove.com / password")
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.4))
+                    // One-tap demo login
+                    Button {
+                        Task {
+                            email = "john@whiteglove.com"
+                            password = "password"
+                            await authService.signIn(email: "john@whiteglove.com", password: "password")
+                        }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "person.fill.viewfinder")
+                            Text("Demo Login")
+                                .font(.subheadline.weight(.medium))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(cardColor)
+                        .foregroundColor(goldColor)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(goldColor.opacity(0.3), lineWidth: 1)
+                        )
+                    }
+                    .disabled(authService.isLoading)
                 }
                 .padding(.horizontal, 32)
 

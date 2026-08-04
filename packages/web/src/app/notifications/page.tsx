@@ -1,22 +1,12 @@
-'use client';
-
-import { useState } from 'react';
-import { Settings } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { NotificationItem } from '@/components/notification/NotificationItem';
-import { MOCK_NOTIFICATIONS } from '@/lib/mock-data';
+import { Settings } from 'lucide-react';
+import { fetchNotifications, getCurrentUser } from '@/lib/queries';
+import { NotificationList } from './notification-list';
 
-const TABS = ['All', 'Unread', 'Updates', 'Alerts'];
-
-export default function NotificationsPage() {
-  const [activeTab, setActiveTab] = useState('All');
-
-  const filtered = activeTab === 'All'
-    ? MOCK_NOTIFICATIONS
-    : activeTab === 'Unread'
-      ? MOCK_NOTIFICATIONS.filter((n) => !n.read)
-      : MOCK_NOTIFICATIONS;
+export default async function NotificationsPage() {
+  const user = await getCurrentUser();
+  const notifications = user ? await fetchNotifications(user.id) : [];
 
   return (
     <AppShell>
@@ -29,32 +19,7 @@ export default function NotificationsPage() {
             </button>
           }
         />
-
-        <div className="flex gap-1 mt-6 mb-4">
-          {TABS.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                activeTab === tab
-                  ? 'bg-wg-blue/10 text-wg-blue'
-                  : 'text-wg-text2 hover:bg-wg-card'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
-        <div className="bg-wg-card rounded-xl border border-wg-border overflow-hidden divide-y divide-wg-border">
-          {filtered.map((n) => (
-            <NotificationItem key={n.id} notification={n} />
-          ))}
-        </div>
-
-        <div className="text-center mt-4">
-          <button className="text-sm text-wg-blue hover:underline">View All Notifications</button>
-        </div>
+        <NotificationList notifications={notifications} />
       </div>
     </AppShell>
   );
