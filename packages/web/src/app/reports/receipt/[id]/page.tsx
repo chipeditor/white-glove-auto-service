@@ -41,8 +41,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
 
       {/* Receipt Header */}
       <div className="text-center border-b-2 border-dashed border-gray-400 pb-4 mb-4">
-        <h1 className="text-xl font-bold tracking-tight">{String(org?.name ?? 'KSB White Glove Service')}</h1>
-        {org?.address ? <p className="text-xs text-gray-600 mt-1">{String(org.address)}</p> : null}
+        <h1 className="text-xl font-bold tracking-tight">{String(org?.name ?? 'KSB Performance')}</h1>
+        {org?.address_line1 ? <p className="text-xs text-gray-600 mt-1">{String(org.address_line1)}{org.city ? `, ${String(org.city)}, ${String(org.state ?? '')} ${String(org.zip ?? '')}` : ''}</p> : null}
         {org?.phone ? <p className="text-xs text-gray-600">{String(org.phone)}</p> : null}
         <p className="text-sm font-semibold mt-3">RECEIPT</p>
         <p className="text-xs text-gray-500">#{id.slice(0, 8).toUpperCase()}</p>
@@ -132,7 +132,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
 
       {/* Footer */}
       <div className="text-center text-xs text-gray-400 pb-4">
-        <p>Thank you for choosing {String(org?.name ?? 'KSB White Glove Service')}</p>
+        <p>Thank you for choosing {String(org?.name ?? 'KSB Performance')}</p>
         <p className="mt-1">Questions? Call {String(org?.phone ?? 'the shop')}</p>
       </div>
     </div>

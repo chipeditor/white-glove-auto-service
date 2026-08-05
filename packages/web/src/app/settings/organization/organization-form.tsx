@@ -7,7 +7,7 @@ interface Org {
   id: string;
   name: string;
   phone: string | null;
-  address: string | null;
+  address_line1: string | null;
   city: string | null;
   state: string | null;
   zip: string | null;
@@ -16,7 +16,7 @@ interface Org {
 export function OrganizationForm({ org }: { org: Org }) {
   const [name, setName] = useState(org.name);
   const [phone, setPhone] = useState(org.phone ?? '');
-  const [address, setAddress] = useState(org.address ?? '');
+  const [address, setAddress] = useState(org.address_line1 ?? '');
   const [city, setCity] = useState(org.city ?? '');
   const [state, setState] = useState(org.state ?? '');
   const [zip, setZip] = useState(org.zip ?? '');
@@ -29,7 +29,7 @@ export function OrganizationForm({ org }: { org: Org }) {
     const supabase = createClient();
     await supabase
       .from('organizations')
-      .update({ name, phone: phone || null, address: address || null, city: city || null, state: state || null, zip: zip || null, updated_at: new Date().toISOString() })
+      .update({ name, phone: phone || null, address_line1: address || null, city: city || null, state: state || null, zip: zip || null, updated_at: new Date().toISOString() })
       .eq('id', org.id);
     setSaving(false);
     setSaved(true);
