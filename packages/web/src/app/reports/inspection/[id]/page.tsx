@@ -1,6 +1,5 @@
 import { fetchInspectionReport } from '@/lib/queries';
 import { notFound } from 'next/navigation';
-import type { InspectionItem } from '@/shared/types';
 import { PrintButton } from '@/components/ui/PrintButton';
 
 const CONDITION_COLORS: Record<string, string> = {
@@ -24,6 +23,22 @@ function formatDate(dateStr: string) {
   });
 }
 
+interface ReportItem {
+  id: string;
+  label: string;
+  passed: boolean | null;
+  condition?: string | null;
+  notes: string | null;
+  flagged: boolean;
+}
+
+function getCondition(item: ReportItem): string {
+  if (item.condition) return item.condition;
+  if (item.passed === true) return 'good';
+  if (item.passed === false) return 'poor';
+  return 'na';
+}
+
 export default async function InspectionReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const data = await fetchInspectionReport(id);
@@ -34,11 +49,13 @@ export default async function InspectionReportPage({ params }: { params: Promise
   const customer = (vehicle?.customer ?? null) as Record<string, unknown> | null;
   const tech = inspection.technician as Record<string, unknown> | null;
 
-  const totalItems = sections.reduce((sum: number, s: Record<string, unknown>) => sum + ((s.items as unknown[]) ?? []).length, 0);
-  const goodItems = sections.reduce((sum: number, s: Record<string, unknown>) =>
-    sum + ((s.items as InspectionItem[]) ?? []).filter((i) => i.condition === 'good').length, 0);
-  const poorItems = sections.reduce((sum: number, s: Record<string, unknown>) =>
-    sum + ((s.items as InspectionItem[]) ?? []).filter((i) => i.condition === 'poor' || i.condition === 'needs_attention').length, 0);
+  const allItems = sections.flatMap((s: Record<string, unknown>) => ((s.items as ReportItem[]) ?? []));
+  const totalItems = allItems.length;
+  const goodItems = allItems.filter((i) => getCondition(i) === 'good').length;
+  const poorItems = allItems.filter((i) => {
+    const c = getCondition(i);
+    return c === 'poor' || c === 'needs_attention';
+  }).length;
 
   return (
     <div className="min-h-screen bg-white text-gray-900 print:bg-white">
@@ -57,17 +74,17 @@ export default async function InspectionReportPage({ params }: { params: Promise
       <div className="border-b-2 border-gray-900 pb-4 mb-6">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">{organization?.name ?? 'White Glove Auto Service'}</h1>
-            {organization?.address && <p className="text-sm text-gray-600 mt-0.5">{organization.address as string}</p>}
-            {organization?.phone && <p className="text-sm text-gray-600">{organization.phone as string}</p>}
+            <h1 className="text-2xl font-bold tracking-tight">{String(organization?.name ?? 'White Glove Auto Service')}</h1>
+            {organization?.address ? <p className="text-sm text-gray-600 mt-0.5">{String(organization.address)}</p> : null}
+            {organization?.phone ? <p className="text-sm text-gray-600">{String(organization.phone)}</p> : null}
           </div>
           <div className="text-right">
             <h2 className="text-lg font-semibold text-gray-900">INSPECTION REPORT</h2>
             <p className="text-sm text-gray-600">
-              {(inspection.inspection_type as string)?.replace('_', ' ').toUpperCase()}
+              {String(inspection.inspection_type ?? '').replace('_', ' ').toUpperCase()}
             </p>
             <p className="text-sm text-gray-600 mt-1">
-              Date: {formatDate(inspection.created_at as string)}
+              Date: {formatDate(String(inspection.created_at))}
             </p>
           </div>
         </div>
@@ -77,26 +94,26 @@ export default async function InspectionReportPage({ params }: { params: Promise
       <div className="grid grid-cols-2 gap-6 mb-6">
         <div className="border border-gray-300 rounded-lg p-4">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Vehicle Information</h3>
-          <p className="font-semibold">{`${vehicle?.year ?? ''} ${vehicle?.make} ${vehicle?.model}`.trim()}</p>
-          {vehicle?.trim_level && <p className="text-sm text-gray-600">{vehicle.trim_level as string}</p>}
-          {vehicle?.vin && <p className="text-sm text-gray-600">VIN: {vehicle.vin as string}</p>}
-          {vehicle?.mileage && <p className="text-sm text-gray-600">Mileage: {(vehicle.mileage as number).toLocaleString()}</p>}
-          {vehicle?.exterior_color && <p className="text-sm text-gray-600">Color: {vehicle.exterior_color as string}</p>}
+          <p className="font-semibold">{`${vehicle?.year ?? ''} ${vehicle?.make ?? ''} ${vehicle?.model ?? ''}`.trim()}</p>
+          {vehicle?.trim_level ? <p className="text-sm text-gray-600">{String(vehicle.trim_level)}</p> : null}
+          {vehicle?.vin ? <p className="text-sm text-gray-600">VIN: {String(vehicle.vin)}</p> : null}
+          {vehicle?.mileage ? <p className="text-sm text-gray-600">Mileage: {Number(vehicle.mileage).toLocaleString()}</p> : null}
+          {vehicle?.exterior_color ? <p className="text-sm text-gray-600">Color: {String(vehicle.exterior_color)}</p> : null}
         </div>
         <div className="border border-gray-300 rounded-lg p-4">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Customer Information</h3>
           {customer ? (
             <>
-              <p className="font-semibold">{customer.full_name as string}</p>
-              {customer.email && <p className="text-sm text-gray-600">{customer.email as string}</p>}
-              {customer.phone && <p className="text-sm text-gray-600">{customer.phone as string}</p>}
+              <p className="font-semibold">{String(customer.full_name)}</p>
+              {customer.email ? <p className="text-sm text-gray-600">{String(customer.email)}</p> : null}
+              {customer.phone ? <p className="text-sm text-gray-600">{String(customer.phone)}</p> : null}
             </>
           ) : (
             <p className="text-sm text-gray-500">No customer assigned</p>
           )}
           <div className="mt-3 pt-3 border-t border-gray-200">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Inspector</h3>
-            <p className="text-sm font-medium">{tech?.full_name ?? 'Unassigned'}</p>
+            <p className="text-sm font-medium">{String(tech?.full_name ?? 'Unassigned')}</p>
           </div>
         </div>
       </div>
@@ -119,12 +136,12 @@ export default async function InspectionReportPage({ params }: { params: Promise
 
       {/* Inspection Sections */}
       {sections.map((section: Record<string, unknown>, idx: number) => {
-        const items = (section.items as InspectionItem[]) ?? [];
+        const items = (section.items as ReportItem[]) ?? [];
         return (
-          <div key={section.id as string} className={idx > 0 && idx % 3 === 0 ? 'page-break' : ''}>
+          <div key={String(section.id)} className={idx > 0 && idx % 3 === 0 ? 'page-break' : ''}>
             <div className="mb-5">
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider bg-gray-100 px-3 py-2 rounded">
-                {section.title as string}
+                {String(section.title)}
               </h3>
               <table className="w-full mt-1">
                 <thead>
@@ -135,24 +152,23 @@ export default async function InspectionReportPage({ params }: { params: Promise
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((item) => (
-                    <tr key={item.id} className="border-b border-gray-100">
-                      <td className="py-1.5 px-3 text-sm">{item.label}</td>
-                      <td className="py-1.5 px-3 text-center">
-                        {item.condition ? (
+                  {items.map((item) => {
+                    const cond = getCondition(item);
+                    return (
+                      <tr key={item.id} className="border-b border-gray-100">
+                        <td className="py-1.5 px-3 text-sm">{item.label}</td>
+                        <td className="py-1.5 px-3 text-center">
                           <span
                             className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full text-white"
-                            style={{ backgroundColor: CONDITION_COLORS[item.condition] ?? '#6b7280' }}
+                            style={{ backgroundColor: CONDITION_COLORS[cond] ?? '#6b7280' }}
                           >
-                            {CONDITION_LABELS[item.condition] ?? item.condition}
+                            {CONDITION_LABELS[cond] ?? cond}
                           </span>
-                        ) : (
-                          <span className="text-xs text-gray-400">—</span>
-                        )}
-                      </td>
-                      <td className="py-1.5 px-3 text-sm text-gray-600">{item.notes ?? ''}</td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="py-1.5 px-3 text-sm text-gray-600">{item.notes ?? ''}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -164,7 +180,7 @@ export default async function InspectionReportPage({ params }: { params: Promise
       <div className="mt-8 pt-4 border-t-2 border-gray-900">
         <div className="flex justify-between text-xs text-gray-500">
           <p>Report generated {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-          <p>{organization?.name ?? 'White Glove Auto Service'} — Confidential</p>
+          <p>{String(organization?.name ?? 'White Glove Auto Service')} — Confidential</p>
         </div>
       </div>
     </div>

@@ -69,7 +69,7 @@ export default async function ReportsPage() {
                           {v ? `${v.year ?? ''} ${v.make} ${v.model}`.trim() : 'Unknown Vehicle'}
                         </p>
                         <p className="text-xs text-wg-muted">
-                          {(insp.inspection_type as string)?.replace('_', ' ')} — {tech?.full_name ?? 'Unassigned'}
+                          {String(insp.inspection_type ?? '').replace('_', ' ')} — {String(tech?.full_name ?? 'Unassigned')}
                         </p>
                       </div>
                       <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
@@ -94,7 +94,7 @@ export default async function ReportsPage() {
             ) : (
               <div className="space-y-2">
                 {srs.map((sr) => {
-                  const v = sr.vehicle as Record<string, unknown> | null;
+                  const v = sr.vehicle;
                   return (
                     <Link
                       key={sr.id}

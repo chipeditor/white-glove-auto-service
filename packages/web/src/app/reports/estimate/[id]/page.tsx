@@ -69,9 +69,9 @@ export default async function EstimateReportPage({ params }: { params: Promise<{
         <div className="border border-gray-300 rounded-lg p-4">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Vehicle</h3>
           <p className="font-semibold">{`${vehicle?.year ?? ''} ${vehicle?.make} ${vehicle?.model}`.trim()}</p>
-          {vehicle?.trim_level && <p className="text-sm text-gray-600">{vehicle.trim_level as string}</p>}
-          {vehicle?.vin && <p className="text-sm text-gray-600">VIN: {vehicle.vin as string}</p>}
-          {vehicle?.mileage && <p className="text-sm text-gray-600">Mileage: {(vehicle.mileage as number).toLocaleString()}</p>}
+          {vehicle?.trim_level ? <p className="text-sm text-gray-600">{String(vehicle.trim_level)}</p> : null}
+          {vehicle?.vin ? <p className="text-sm text-gray-600">VIN: {String(vehicle.vin)}</p> : null}
+          {vehicle?.mileage ? <p className="text-sm text-gray-600">Mileage: {Number(vehicle.mileage).toLocaleString()}</p> : null}
         </div>
         <div className="border border-gray-300 rounded-lg p-4">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Customer</h3>
