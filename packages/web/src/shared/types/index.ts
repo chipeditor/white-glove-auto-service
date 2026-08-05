@@ -93,7 +93,23 @@ export type AuditAction =
   | 'photo_captured'
   | 'note_added'
   | 'pressure_test_completed'
-  | 'road_test_completed';
+  | 'road_test_completed'
+  | 'discovery_found'
+  | 'scope_expanded'
+  | 'parts_ordered'
+  | 'parts_backordered'
+  | 'phase_changed'
+  | 'sublet_sent'
+  | 'sublet_returned'
+  | 'comeback_logged'
+  | 'tech_unavailable'
+  | 'promise_date_set'
+  | 'promise_date_changed';
+
+export type PartsStatus = 'not_needed' | 'ordered' | 'backordered' | 'received';
+export type PartsTier = 'local' | 'domestic' | 'factory' | 'fabrication';
+export type WorkPhase = 'diagnosis' | 'scoped' | 'active' | 'hold' | 'qc' | 'complete';
+export type SubletStatus = 'pending' | 'sent' | 'in_progress' | 'returned' | 'cancelled';
 
 // ===========================================
 // Base
@@ -188,6 +204,10 @@ export interface ServiceRequest extends Timestamps {
   priority: number;
   estimated_completion: string | null;
   actual_completion: string | null;
+  promised_at: string | null;
+  diagnosis_completed_at: string | null;
+  is_discovery: boolean;
+  parent_request_id: string | null;
   subtotal: number;
   tax_rate: number;
   tax_amount: number;
@@ -388,6 +408,14 @@ export interface RepairOrderLine extends Timestamps {
   technician_id: string | null;
   sort_order: number;
   notes: string | null;
+  parts_status: PartsStatus;
+  parts_tier: PartsTier | null;
+  parts_eta_days: number | null;
+  parts_ordered_at: string | null;
+  parts_received_at: string | null;
+  work_started_at: string | null;
+  work_completed_at: string | null;
+  phase: WorkPhase;
 }
 
 export interface ServiceRequestWithVehicle extends ServiceRequest {
@@ -462,4 +490,103 @@ export interface VehicleDetail extends Vehicle {
   service_requests: ServiceRequest[];
   inspections: Inspection[];
   media: MediaAsset[];
+}
+
+// ===========================================
+// Health Board
+// ===========================================
+
+export interface SubletJob extends Timestamps {
+  id: string;
+  organization_id: string;
+  service_request_id: string;
+  line_id: string | null;
+  vendor_name: string;
+  vendor_type: string | null;
+  description: string | null;
+  sent_at: string | null;
+  promised_return: string | null;
+  actual_return: string | null;
+  cost: number | null;
+  status: SubletStatus;
+  notes: string | null;
+}
+
+export interface TechCapacity {
+  id: string;
+  user_id: string;
+  organization_id: string;
+  daily_hours: number;
+  is_available_today: boolean;
+  out_reason: string | null;
+  updated_at: string;
+}
+
+export interface Comeback {
+  id: string;
+  organization_id: string;
+  original_request_id: string;
+  return_request_id: string | null;
+  technician_id: string | null;
+  same_system: boolean;
+  days_since_delivery: number | null;
+  description: string | null;
+  root_cause: string | null;
+  resolved_at: string | null;
+  created_at: string;
+}
+
+export interface HealthBoardSR {
+  id: string;
+  organization_id: string;
+  vehicle_id: string;
+  technician_id: string | null;
+  advisor_id: string | null;
+  title: string;
+  status: ServiceRequestStatus;
+  priority: number;
+  promised_at: string | null;
+  estimated_completion: string | null;
+  diagnosis_completed_at: string | null;
+  is_discovery: boolean;
+  parent_request_id: string | null;
+  created_at: string;
+  updated_at: string;
+  total_labor_hours: number;
+  completed_labor_hours: number;
+  active_labor_hours: number;
+  parts_ordered_count: number;
+  parts_backordered_count: number;
+  max_parts_eta_days: number | null;
+  lines_in_diagnosis: number;
+  lines_active: number;
+  lines_on_hold: number;
+  lines_complete: number;
+  total_lines: number;
+  active_sublets: number;
+}
+
+export type HealthStatus = 'on_track' | 'tight' | 'at_risk' | 'blocked' | 'overdue';
+
+export interface TechLane {
+  tech: User;
+  capacity: TechCapacity | null;
+  jobs: (HealthBoardSR & {
+    vehicle: Vehicle;
+    health_status: HealthStatus;
+    remaining_hours: number;
+  })[];
+}
+
+export interface ShopPulse {
+  on_time_pct: number;
+  on_time_trend: number;
+  vehicles_active: number;
+  bay_count: number;
+  at_risk_count: number;
+  at_risk_reasons: string;
+  aging_count: number;
+  aging_detail: string;
+  comeback_count_30d: number;
+  comeback_streak_days: number;
 }

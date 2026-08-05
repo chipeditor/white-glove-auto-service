@@ -17,6 +17,7 @@ import {
   Bell,
   Settings,
   LogOut,
+  Activity,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { createClient } from '@/lib/supabase';
@@ -38,6 +39,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/schedule', label: 'Schedule', icon: CalendarDays, roles: ['super_admin', 'shop_admin', 'service_advisor', 'technician'] },
   { href: '/appointments', label: 'Appointments', icon: CalendarCheck, roles: ['super_admin', 'shop_admin', 'service_advisor'] },
   { href: '/reports', label: 'Reports', icon: BarChart3, roles: ['super_admin', 'shop_admin', 'service_advisor'] },
+  { href: '/health-board', label: 'Health Board', icon: Activity, roles: ['super_admin', 'shop_admin', 'service_advisor', 'technician'] },
 ];
 
 const BOTTOM_ITEMS = [
