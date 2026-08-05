@@ -180,9 +180,13 @@ struct LoginView: View {
         loadingEmail = email
         staffError = nil
 
+        let staffPassword = "testpass123!"
+
+        // Try API first to ensure user exists, then sign in directly
         do {
             guard let url = URL(string: "\(webAppURL)/api/test-login") else {
-                staffError = "Invalid server URL"
+                // API URL invalid — try direct sign-in
+                await authService.signIn(email: email, password: staffPassword)
                 loadingEmail = nil
                 return
             }
@@ -190,29 +194,23 @@ struct LoginView: View {
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.timeoutInterval = 10
             request.httpBody = try JSONSerialization.data(withJSONObject: ["email": email])
 
             let (data, response) = try await URLSession.shared.data(for: request)
+            let httpResponse = response as? HTTPURLResponse
 
-            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-                let body = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-                staffError = body?["error"] as? String ?? "Failed to set up test account"
-                loadingEmail = nil
-                return
+            if httpResponse?.statusCode == 200,
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: String],
+               let pw = json["password"] {
+                await authService.signIn(email: email, password: pw)
+            } else {
+                await authService.signIn(email: email, password: staffPassword)
             }
-
-            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: String],
-                  let staffEmail = json["email"],
-                  let staffPassword = json["password"] else {
-                staffError = "Invalid server response"
-                loadingEmail = nil
-                return
-            }
-
-            await authService.signIn(email: staffEmail, password: staffPassword)
             loadingEmail = nil
         } catch {
-            staffError = error.localizedDescription
+            // API unreachable — sign in directly with known credentials
+            await authService.signIn(email: email, password: staffPassword)
             loadingEmail = nil
         }
     }
