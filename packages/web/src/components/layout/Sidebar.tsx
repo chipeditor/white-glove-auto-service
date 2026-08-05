@@ -92,7 +92,7 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean; onClose
       </div>
 
       <nav className="flex-1 px-3 space-y-0.5">
-        {NAV_ITEMS.filter((item) => !item.roles || (role && item.roles.includes(role))).map((item) => {
+        {NAV_ITEMS.filter((item) => !item.roles || !role || item.roles.includes(role)).map((item) => {
           const active = pathname.startsWith(item.href);
           return (
             <Link
@@ -135,7 +135,7 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean; onClose
         })}
       </div>
 
-      <div className="px-3 py-4 border-t border-wg-border">
+      <div className="px-3 py-4 border-t border-wg-border space-y-2">
         <div className="flex items-center gap-3 px-3">
           <div className="w-8 h-8 rounded-full bg-wg-card flex items-center justify-center text-xs font-medium text-wg-text2">
             {getInitials(profile?.full_name)}
@@ -148,13 +148,14 @@ export function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean; onClose
               {role ? ROLE_LABELS[role] ?? role : ''}
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="text-wg-muted hover:text-wg-text transition-colors"
-          >
-            <LogOut size={16} />
-          </button>
         </div>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-wg-text2 hover:text-wg-text hover:bg-wg-card transition-colors"
+        >
+          <LogOut size={18} />
+          <span>Log Out</span>
+        </button>
       </div>
     </aside>
   );
