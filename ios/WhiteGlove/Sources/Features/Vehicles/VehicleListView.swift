@@ -25,14 +25,13 @@ struct VehicleListView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Status Filter
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        FilterChip(title: "All", isSelected: selectedStatus == nil) {
+                        GlassFilterChip(title: "All", isSelected: selectedStatus == nil) {
                             selectedStatus = nil
                         }
                         ForEach(VehicleStatus.allCases, id: \.self) { status in
-                            FilterChip(title: status.displayName, isSelected: selectedStatus == status) {
+                            GlassFilterChip(title: status.displayName, isSelected: selectedStatus == status) {
                                 selectedStatus = status
                             }
                         }
@@ -51,7 +50,7 @@ struct VehicleListView: View {
                     )
                 } else {
                     ScrollView {
-                        LazyVStack(spacing: 12) {
+                        LazyVStack(spacing: 10) {
                             ForEach(filteredVehicles) { vehicle in
                                 NavigationLink {
                                     VehicleDetailView(vehicle: vehicle)
@@ -65,7 +64,12 @@ struct VehicleListView: View {
                     }
                 }
             }
-            .background(Theme.bgColor.ignoresSafeArea())
+            .background(
+                LinearGradient(
+                    colors: [Color(hex: "#0d0d18"), Color(hex: "#111125")],
+                    startPoint: .top, endPoint: .bottom
+                ).ignoresSafeArea()
+            )
             .navigationTitle("Vehicles")
             .searchable(text: $searchText, prompt: "Search vehicles...")
             .toolbar {
@@ -96,9 +100,9 @@ struct VehicleListView: View {
     }
 }
 
-// MARK: - Filter Chip
+// MARK: - Glass Filter Chip
 
-private struct FilterChip: View {
+private struct GlassFilterChip: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void
@@ -106,15 +110,20 @@ private struct FilterChip: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.caption.weight(.medium))
+                .font(.caption.weight(isSelected ? .semibold : .medium))
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
-                .background(isSelected ? Theme.goldColor : Theme.cardColor)
-                .foregroundColor(isSelected ? Color(hex: Theme.background) : Theme.text2Color)
-                .cornerRadius(20)
+                .background(
+                    isSelected
+                        ? AnyShapeStyle(.ultraThinMaterial)
+                        : AnyShapeStyle(Color.clear)
+                )
+                .background(isSelected ? Theme.goldColor.opacity(0.1) : Color.white.opacity(0.03))
+                .foregroundColor(isSelected ? Theme.goldColor : .white.opacity(0.45))
+                .clipShape(Capsule())
                 .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(isSelected ? .clear : Theme.borderColor, lineWidth: 1)
+                    Capsule()
+                        .stroke(isSelected ? Theme.goldColor.opacity(0.25) : Color.white.opacity(0.06), lineWidth: 1)
                 )
         }
     }

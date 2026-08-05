@@ -184,6 +184,111 @@ enum UserRole: String, Codable, Sendable {
     case customer = "customer"
 }
 
+// MARK: - Line Item & Work Enums
+
+enum LineItemType: String, Codable, Sendable, CaseIterable {
+    case labor = "labor"
+    case parts = "parts"
+    case sublet = "sublet"
+    case fee = "fee"
+    case discount = "discount"
+}
+
+enum LineItemStatus: String, Codable, Sendable, CaseIterable {
+    case pending = "pending"
+    case approved = "approved"
+    case declined = "declined"
+    case inProgress = "in_progress"
+    case completed = "completed"
+
+    var displayName: String {
+        switch self {
+        case .pending: return "Pending"
+        case .approved: return "Approved"
+        case .declined: return "Declined"
+        case .inProgress: return "In Progress"
+        case .completed: return "Completed"
+        }
+    }
+}
+
+enum PartsStatus: String, Codable, Sendable {
+    case notNeeded = "not_needed"
+    case toOrder = "to_order"
+    case ordered = "ordered"
+    case inTransit = "in_transit"
+    case received = "received"
+    case installed = "installed"
+}
+
+enum PartsTier: String, Codable, Sendable {
+    case oem = "oem"
+    case oemPlus = "oem_plus"
+    case performance = "performance"
+    case economy = "economy"
+}
+
+enum WorkPhase: String, Codable, Sendable, CaseIterable {
+    case diagnosis = "diagnosis"
+    case scoped = "scoped"
+    case active = "active"
+    case hold = "hold"
+    case qc = "qc"
+    case complete = "complete"
+
+    var displayName: String {
+        switch self {
+        case .diagnosis: return "Diagnosis"
+        case .scoped: return "Scoped"
+        case .active: return "Active"
+        case .hold: return "Hold"
+        case .qc: return "QC"
+        case .complete: return "Complete"
+        }
+    }
+
+    var color: String {
+        switch self {
+        case .diagnosis: return Theme.blue
+        case .scoped: return Theme.text2
+        case .active: return Theme.gold
+        case .hold: return "#e87040"
+        case .qc: return Theme.blue
+        case .complete: return Theme.green
+        }
+    }
+}
+
+enum HealthStatus: String, Codable, Sendable {
+    case onTrack = "on_track"
+    case tight = "tight"
+    case atRisk = "at_risk"
+    case blocked = "blocked"
+    case overdue = "overdue"
+
+    var color: String {
+        switch self {
+        case .onTrack: return "#c8a45c"
+        case .tight: return "#9ca3af"
+        case .atRisk, .blocked: return "#e87040"
+        case .overdue: return "#ff3b3b"
+        }
+    }
+}
+
+enum CannedJobCategory: String, Codable, Sendable, CaseIterable {
+    case maintenance = "Maintenance"
+    case brakes = "Brakes"
+    case engine = "Engine"
+    case transmission = "Transmission"
+    case suspension = "Suspension"
+    case climate = "Climate"
+    case electrical = "Electrical"
+    case diagnostics = "Diagnostics"
+    case detailing = "Detailing"
+    case other = "Other"
+}
+
 // MARK: - Models
 
 struct Organization: Codable, Identifiable, Sendable {
@@ -289,14 +394,28 @@ struct ServiceRequest: Codable, Identifiable, Sendable {
     let priority: Int
     let estimatedCompletion: Date?
     let actualCompletion: Date?
+    let promisedAt: Date?
+    let diagnosisCompletedAt: Date?
+    let isDiscovery: Bool?
+    let parentRequestId: UUID?
+    let subtotal: Double?
+    let phase: WorkPhase?
+    let healthStatus: HealthStatus?
+    let technicianId: UUID?
     let createdAt: Date
 
     enum CodingKeys: String, CodingKey {
-        case id, title, description, status, priority
+        case id, title, description, status, priority, subtotal, phase
         case vehicleId = "vehicle_id"
         case organizationId = "organization_id"
         case estimatedCompletion = "estimated_completion"
         case actualCompletion = "actual_completion"
+        case promisedAt = "promised_at"
+        case diagnosisCompletedAt = "diagnosis_completed_at"
+        case isDiscovery = "is_discovery"
+        case parentRequestId = "parent_request_id"
+        case healthStatus = "health_status"
+        case technicianId = "technician_id"
         case createdAt = "created_at"
     }
 }
@@ -608,3 +727,147 @@ struct AffiliateRecommendation: Codable, Identifiable, Sendable {
         case createdAt = "created_at"
     }
 }
+
+// MARK: - Repair Order Line Items
+
+struct RepairOrderLine: Codable, Identifiable, Sendable {
+    let id: UUID
+    let serviceRequestId: UUID
+    let organizationId: UUID
+    let lineType: LineItemType
+    let description: String
+    let quantity: Double
+    let unitPrice: Double
+    let discountAmount: Double
+    let total: Double
+    let status: LineItemStatus
+    let phase: WorkPhase?
+    let partsStatus: PartsStatus?
+    let partsTier: PartsTier?
+    let partsEta: Date?
+    let technicianId: UUID?
+    let cannedJobId: UUID?
+    let sortOrder: Int
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id, description, quantity, total, status, phase
+        case serviceRequestId = "service_request_id"
+        case organizationId = "organization_id"
+        case lineType = "line_type"
+        case unitPrice = "unit_price"
+        case discountAmount = "discount_amount"
+        case partsStatus = "parts_status"
+        case partsTier = "parts_tier"
+        case partsEta = "parts_eta"
+        case technicianId = "technician_id"
+        case cannedJobId = "canned_job_id"
+        case sortOrder = "sort_order"
+        case createdAt = "created_at"
+    }
+}
+
+// MARK: - Canned Jobs
+
+struct CannedJob: Codable, Identifiable, Sendable {
+    let id: UUID
+    let organizationId: UUID
+    let name: String
+    let description: String?
+    let category: CannedJobCategory
+    let laborHours: Double
+    let laborRate: Double
+    let partsCost: Double
+    let totalEstimate: Double
+    let isActive: Bool
+    let sortOrder: Int
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, description, category
+        case organizationId = "organization_id"
+        case laborHours = "labor_hours"
+        case laborRate = "labor_rate"
+        case partsCost = "parts_cost"
+        case totalEstimate = "total_estimate"
+        case isActive = "is_active"
+        case sortOrder = "sort_order"
+        case createdAt = "created_at"
+    }
+}
+
+// MARK: - Health Board
+
+struct HealthBoardSR: Codable, Identifiable, Sendable {
+    let id: UUID
+    let title: String
+    let status: ServiceRequestStatus
+    let phase: WorkPhase?
+    let healthStatus: HealthStatus?
+    let estimatedCompletion: Date?
+    let promisedAt: Date?
+    let vehicleYear: Int?
+    let vehicleMake: String?
+    let vehicleModel: String?
+    let technicianName: String?
+    let remainingHours: Double?
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, status, phase
+        case healthStatus = "health_status"
+        case estimatedCompletion = "estimated_completion"
+        case promisedAt = "promised_at"
+        case vehicleYear = "vehicle_year"
+        case vehicleMake = "vehicle_make"
+        case vehicleModel = "vehicle_model"
+        case technicianName = "technician_name"
+        case remainingHours = "remaining_hours"
+    }
+
+    var vehicleDisplayName: String {
+        let year = vehicleYear.map { "\($0) " } ?? ""
+        return "\(year)\(vehicleMake ?? "") \(vehicleModel ?? "")".trimmingCharacters(in: .whitespaces)
+    }
+}
+
+struct TechLane: Codable, Identifiable, Sendable {
+    var id: String { name }
+    let name: String
+    let jobs: [HealthBoardSR]
+    let capacity: Double
+    let utilized: Double
+}
+
+struct ShopPulse: Codable, Sendable {
+    let onTimePercent: Int
+    let vehiclesActive: Int
+    let atRiskCount: Int
+    let agingCount: Int
+    let comebackCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case onTimePercent = "on_time_percent"
+        case vehiclesActive = "vehicles_active"
+        case atRiskCount = "at_risk_count"
+        case agingCount = "aging_count"
+        case comebackCount = "comeback_count"
+    }
+}
+
+struct HealthBoardData: Codable, Sendable {
+    let pulse: ShopPulse
+    let lanes: [TechLane]
+}
+
+// MARK: - Schedule
+
+struct ScheduleEntry: Identifiable, Sendable {
+    let id: UUID
+    let title: String
+    let vehicleName: String
+    let technicianName: String?
+    let status: ServiceRequestStatus
+    let estimatedCompletion: Date?
+    let startDate: Date?
+}
+

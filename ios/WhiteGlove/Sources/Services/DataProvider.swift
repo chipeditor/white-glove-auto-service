@@ -53,4 +53,20 @@ protocol DataProvider {
     func fetchNotifications(userId: UUID) async throws -> [Notification]
     func markNotificationRead(id: UUID) async throws
     func markAllNotificationsRead(userId: UUID) async throws
+
+    // Line Items
+    func fetchLineItems(serviceRequestId: UUID) async throws -> [RepairOrderLine]
+    func createLineItem(serviceRequestId: UUID, organizationId: UUID, lineType: LineItemType, description: String, quantity: Double, unitPrice: Double) async throws -> RepairOrderLine
+    func deleteLineItem(id: UUID) async throws
+
+    // Canned Jobs
+    func fetchCannedJobs(organizationId: UUID) async throws -> [CannedJob]
+    func createCannedJob(organizationId: UUID, name: String, description: String?, category: CannedJobCategory, laborHours: Double, laborRate: Double, partsCost: Double) async throws -> CannedJob
+    func deleteCannedJob(id: UUID) async throws
+
+    // Health Board
+    func fetchHealthBoard(organizationId: UUID) async throws -> HealthBoardData
+
+    // Staff
+    func fetchStaff(organizationId: UUID) async throws -> [User]
 }

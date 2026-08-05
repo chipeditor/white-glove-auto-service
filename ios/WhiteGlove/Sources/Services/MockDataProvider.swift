@@ -109,7 +109,10 @@ final class MockDataProvider: DataProvider {
                        title: "Performance inspection and delivery verification",
                        description: "Full performance inspection including engine, brakes, suspension, and delivery prep.",
                        status: .inProgress, priority: 1, estimatedCompletion: nil,
-                       actualCompletion: nil, createdAt: ago(2880)),
+                       actualCompletion: nil, promisedAt: nil, diagnosisCompletedAt: nil,
+                       isDiscovery: false, parentRequestId: nil, subtotal: 174.97,
+                       phase: .active, healthStatus: .onTrack, technicianId: userTechId,
+                       createdAt: ago(2880)),
     ]
 
     // MARK: - Inspections
@@ -420,7 +423,10 @@ final class MockDataProvider: DataProvider {
         let sr = ServiceRequest(
             id: UUID(), vehicleId: vehicleId, organizationId: organizationId,
             title: title, description: description, status: .submitted,
-            priority: 1, estimatedCompletion: nil, actualCompletion: nil, createdAt: Date()
+            priority: 1, estimatedCompletion: nil, actualCompletion: nil,
+            promisedAt: nil, diagnosisCompletedAt: nil, isDiscovery: false,
+            parentRequestId: nil, subtotal: nil, phase: nil, healthStatus: nil,
+            technicianId: nil, createdAt: Date()
         )
         serviceRequests.append(sr)
         return sr
@@ -562,6 +568,97 @@ final class MockDataProvider: DataProvider {
                 vehicleId: old.vehicleId, createdAt: old.createdAt
             )
         }
+    }
+
+    // MARK: - Line Items
+
+    func fetchLineItems(serviceRequestId: UUID) async throws -> [RepairOrderLine] {
+        try await Task.sleep(nanoseconds: 200_000_000)
+        return [
+            RepairOrderLine(id: UUID(), serviceRequestId: serviceRequestId, organizationId: Self.orgId,
+                            lineType: .labor, description: "Engine oil and filter change", quantity: 1, unitPrice: 89.99,
+                            discountAmount: 0, total: 89.99, status: .completed, phase: .complete,
+                            partsStatus: .installed, partsTier: .oem, partsEta: nil, technicianId: Self.userTechId,
+                            cannedJobId: nil, sortOrder: 0, createdAt: Self.ago(1440)),
+            RepairOrderLine(id: UUID(), serviceRequestId: serviceRequestId, organizationId: Self.orgId,
+                            lineType: .parts, description: "OEM Oil Filter", quantity: 1, unitPrice: 24.99,
+                            discountAmount: 0, total: 24.99, status: .completed, phase: .complete,
+                            partsStatus: .installed, partsTier: .oem, partsEta: nil, technicianId: nil,
+                            cannedJobId: nil, sortOrder: 1, createdAt: Self.ago(1440)),
+            RepairOrderLine(id: UUID(), serviceRequestId: serviceRequestId, organizationId: Self.orgId,
+                            lineType: .labor, description: "Brake inspection and pad measurement", quantity: 1, unitPrice: 59.99,
+                            discountAmount: 0, total: 59.99, status: .inProgress, phase: .active,
+                            partsStatus: .notNeeded, partsTier: nil, partsEta: nil, technicianId: Self.userTechId,
+                            cannedJobId: nil, sortOrder: 2, createdAt: Self.ago(720)),
+        ]
+    }
+
+    func createLineItem(serviceRequestId: UUID, organizationId: UUID, lineType: LineItemType, description: String, quantity: Double, unitPrice: Double) async throws -> RepairOrderLine {
+        try await Task.sleep(nanoseconds: 300_000_000)
+        return RepairOrderLine(id: UUID(), serviceRequestId: serviceRequestId, organizationId: organizationId,
+                               lineType: lineType, description: description, quantity: quantity, unitPrice: unitPrice,
+                               discountAmount: 0, total: quantity * unitPrice, status: .pending, phase: nil,
+                               partsStatus: .notNeeded, partsTier: nil, partsEta: nil, technicianId: nil,
+                               cannedJobId: nil, sortOrder: 0, createdAt: Date())
+    }
+
+    func deleteLineItem(id: UUID) async throws {
+        try await Task.sleep(nanoseconds: 200_000_000)
+    }
+
+    // MARK: - Canned Jobs
+
+    func fetchCannedJobs(organizationId: UUID) async throws -> [CannedJob] {
+        try await Task.sleep(nanoseconds: 200_000_000)
+        return [
+            CannedJob(id: UUID(), organizationId: organizationId, name: "Oil Change", description: "Full synthetic oil and filter",
+                      category: .maintenance, laborHours: 0.5, laborRate: 150, partsCost: 45, totalEstimate: 120,
+                      isActive: true, sortOrder: 0, createdAt: Self.ago(50400)),
+            CannedJob(id: UUID(), organizationId: organizationId, name: "Brake Pad Replacement (Front)", description: "Front brake pads with rotor inspection",
+                      category: .brakes, laborHours: 1.5, laborRate: 150, partsCost: 180, totalEstimate: 405,
+                      isActive: true, sortOrder: 1, createdAt: Self.ago(50400)),
+            CannedJob(id: UUID(), organizationId: organizationId, name: "Performance Inspection", description: "Comprehensive 50-point inspection",
+                      category: .diagnostics, laborHours: 2, laborRate: 150, partsCost: 0, totalEstimate: 300,
+                      isActive: true, sortOrder: 2, createdAt: Self.ago(50400)),
+        ]
+    }
+
+    func createCannedJob(organizationId: UUID, name: String, description: String?, category: CannedJobCategory, laborHours: Double, laborRate: Double, partsCost: Double) async throws -> CannedJob {
+        try await Task.sleep(nanoseconds: 300_000_000)
+        return CannedJob(id: UUID(), organizationId: organizationId, name: name, description: description,
+                         category: category, laborHours: laborHours, laborRate: laborRate, partsCost: partsCost,
+                         totalEstimate: (laborHours * laborRate) + partsCost, isActive: true, sortOrder: 0, createdAt: Date())
+    }
+
+    func deleteCannedJob(id: UUID) async throws {
+        try await Task.sleep(nanoseconds: 200_000_000)
+    }
+
+    // MARK: - Health Board
+
+    func fetchHealthBoard(organizationId: UUID) async throws -> HealthBoardData {
+        try await Task.sleep(nanoseconds: 300_000_000)
+        let lanes = [
+            TechLane(name: "James Taylor", jobs: [
+                HealthBoardSR(id: UUID(), title: "Performance inspection", status: .inProgress, phase: .active, healthStatus: .onTrack,
+                              estimatedCompletion: nil, promisedAt: nil, vehicleYear: 2015, vehicleMake: "Chevrolet", vehicleModel: "Corvette",
+                              technicianName: "James Taylor", remainingHours: 3),
+            ], capacity: 8, utilized: 6),
+            TechLane(name: "Maria Garcia", jobs: [
+                HealthBoardSR(id: UUID(), title: "Brake service", status: .inProgress, phase: .hold, healthStatus: .atRisk,
+                              estimatedCompletion: nil, promisedAt: nil, vehicleYear: 2020, vehicleMake: "BMW", vehicleModel: "M4",
+                              technicianName: "Maria Garcia", remainingHours: 5),
+            ], capacity: 8, utilized: 5),
+        ]
+        let pulse = ShopPulse(onTimePercent: 85, vehiclesActive: 4, atRiskCount: 1, agingCount: 0, comebackCount: 0)
+        return HealthBoardData(pulse: pulse, lanes: lanes)
+    }
+
+    // MARK: - Staff
+
+    func fetchStaff(organizationId: UUID) async throws -> [User] {
+        try await Task.sleep(nanoseconds: 200_000_000)
+        return users.filter { $0.role != .customer }
     }
 
     // MARK: - Helper to get customer for a vehicle

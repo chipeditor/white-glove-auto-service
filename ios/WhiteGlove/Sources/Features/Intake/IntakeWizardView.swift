@@ -18,6 +18,9 @@ struct IntakeWizardView: View {
     @State private var isSubmitting = false
     @State private var showSuccess = false
     @State private var submitError: String?
+    @State private var existingCustomers: [Customer] = []
+    @State private var customerSearchText = ""
+    @State private var selectedCustomer: Customer?
 
     private let steps = ["Vehicle", "Customer", "Service", "Inspection"]
 
@@ -36,8 +39,7 @@ struct IntakeWizardView: View {
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .animation(.easeInOut, value: currentStep)
 
-                // Navigation Buttons
-                HStack(spacing: 16) {
+                HStack(spacing: 12) {
                     if currentStep > 0 {
                         Button {
                             withAnimation { currentStep -= 1 }
@@ -47,10 +49,15 @@ struct IntakeWizardView: View {
                                 Text("Back")
                             }
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(Theme.cardColor)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
+                            .padding(.vertical, 16)
+                            .background(.ultraThinMaterial)
+                            .background(Color.white.opacity(0.03))
+                            .foregroundColor(.white.opacity(0.7))
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                            )
                         }
                     }
 
@@ -71,16 +78,25 @@ struct IntakeWizardView: View {
                             }
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Theme.accentColor)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
+                        .padding(.vertical, 16)
+                        .background(Theme.goldColor.opacity(0.15))
+                        .foregroundColor(Theme.goldColor)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(Theme.goldColor.opacity(0.25), lineWidth: 1)
+                        )
                     }
                     .disabled(isSubmitting)
                 }
                 .padding()
             }
-            .background(Theme.bgColor.ignoresSafeArea())
+            .background(
+                LinearGradient(
+                    colors: [Color(hex: "#0d0d18"), Color(hex: "#111125")],
+                    startPoint: .top, endPoint: .bottom
+                ).ignoresSafeArea()
+            )
             .navigationTitle("New Intake")
             .alert("Intake Submitted", isPresented: $showSuccess) {
                 Button("OK") { resetForm() }
@@ -107,7 +123,7 @@ struct IntakeWizardView: View {
         isSubmitting = true
         defer { isSubmitting = false }
 
-        let orgId = MockDataProvider.orgId
+        let orgId = authService.organizationId
 
         do {
             let customer: Customer
@@ -164,7 +180,7 @@ struct IntakeWizardView: View {
     private var vehicleStep: some View {
         ScrollView {
             VStack(spacing: 16) {
-                SectionHeader(title: "Vehicle Information", icon: "car.fill")
+                GlassSectionHeader(title: "Vehicle Information", icon: "car.fill")
 
                 Button {
                     showVINScanner = true
@@ -176,13 +192,14 @@ struct IntakeWizardView: View {
                             .font(.subheadline.weight(.medium))
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(Theme.cardColor)
+                    .padding(.vertical, 16)
+                    .background(.ultraThinMaterial)
+                    .background(Theme.goldColor.opacity(0.06))
                     .foregroundColor(Theme.goldColor)
-                    .cornerRadius(12)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Theme.goldColor.opacity(0.3), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(Theme.goldColor.opacity(0.2), lineWidth: 1)
                     )
                 }
                 .sheet(isPresented: $showVINScanner) {
@@ -200,16 +217,16 @@ struct IntakeWizardView: View {
                         ProgressView().tint(Theme.goldColor)
                         Text("Decoding VIN...")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.white.opacity(0.5))
                     }
                 }
 
-                FormField(label: "VIN", text: $vin, placeholder: "17-character VIN")
+                GlassFormField(label: "VIN", text: $vin, placeholder: "17-character VIN")
                     .autocapitalization(.allCharacters)
-                FormField(label: "Make", text: $make, placeholder: "e.g. Mercedes-Benz")
-                FormField(label: "Model", text: $model, placeholder: "e.g. S 580")
-                FormField(label: "Year", text: $year, placeholder: "e.g. 2024", keyboardType: .numberPad)
-                FormField(label: "Color", text: $color, placeholder: "e.g. Obsidian Black")
+                GlassFormField(label: "Make", text: $make, placeholder: "e.g. Mercedes-Benz")
+                GlassFormField(label: "Model", text: $model, placeholder: "e.g. S 580")
+                GlassFormField(label: "Year", text: $year, placeholder: "e.g. 2024", keyboardType: .numberPad)
+                GlassFormField(label: "Color", text: $color, placeholder: "e.g. Obsidian Black")
             }
             .padding()
         }
@@ -247,29 +264,129 @@ struct IntakeWizardView: View {
     private var customerStep: some View {
         ScrollView {
             VStack(spacing: 16) {
-                SectionHeader(title: "Customer Information", icon: "person.fill")
-                FormField(label: "Full Name", text: $customerName, placeholder: "Customer name")
-                FormField(label: "Email", text: $customerEmail, placeholder: "customer@email.com", keyboardType: .emailAddress)
-                FormField(label: "Phone", text: $customerPhone, placeholder: "(555) 123-4567", keyboardType: .phonePad)
+                GlassSectionHeader(title: "Customer Information", icon: "person.fill")
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Find Existing Customer")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundColor(.white.opacity(0.5))
+
+                    TextField("Search by name or phone", text: $customerSearchText)
+                        .padding()
+                        .background(.ultraThinMaterial)
+                        .background(Color.white.opacity(0.03))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                        )
+                        .foregroundColor(.white)
+                        .onChange(of: customerSearchText) { _, _ in
+                            selectedCustomer = nil
+                        }
+
+                    if !customerSearchText.isEmpty {
+                        let matches = existingCustomers.filter { c in
+                            let q = customerSearchText.lowercased()
+                            return c.fullName.lowercased().contains(q) || (c.phone?.contains(q) ?? false)
+                        }
+                        if !matches.isEmpty {
+                            VStack(spacing: 4) {
+                                ForEach(matches.prefix(5)) { c in
+                                    Button {
+                                        selectedCustomer = c
+                                        customerName = c.fullName
+                                        customerEmail = c.email ?? ""
+                                        customerPhone = c.phone ?? ""
+                                        customerSearchText = ""
+                                    } label: {
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(c.fullName)
+                                                    .font(.subheadline)
+                                                    .foregroundColor(.white.opacity(0.9))
+                                                if let phone = c.phone {
+                                                    Text(phone)
+                                                        .font(.caption)
+                                                        .foregroundColor(.white.opacity(0.45))
+                                                }
+                                            }
+                                            Spacer()
+                                            if selectedCustomer?.id == c.id {
+                                                Image(systemName: "checkmark.circle.fill")
+                                                    .foregroundColor(Theme.goldColor)
+                                            }
+                                        }
+                                        .padding(10)
+                                        .background(Color.white.opacity(0.04))
+                                        .cornerRadius(8)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if let sc = selectedCustomer {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(Theme.goldColor)
+                            Text("Selected: \(sc.fullName)")
+                                .font(.caption.weight(.medium))
+                                .foregroundColor(Theme.goldColor)
+                            Spacer()
+                            Button("Clear") {
+                                selectedCustomer = nil
+                                customerName = ""
+                                customerEmail = ""
+                                customerPhone = ""
+                            }
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.45))
+                        }
+                        .padding(8)
+                        .background(Theme.goldColor.opacity(0.08))
+                        .cornerRadius(8)
+                    }
+                }
+
+                Rectangle().fill(Color.white.opacity(0.06)).frame(height: 1)
+
+                Text("Or enter new customer")
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.4))
+
+                GlassFormField(label: "Full Name", text: $customerName, placeholder: "Customer name")
+                GlassFormField(label: "Email", text: $customerEmail, placeholder: "customer@email.com", keyboardType: .emailAddress)
+                GlassFormField(label: "Phone", text: $customerPhone, placeholder: "(555) 123-4567", keyboardType: .phonePad)
             }
             .padding()
+        }
+        .task {
+            do {
+                existingCustomers = try await authService.dataProvider.fetchCustomers(organizationId: authService.organizationId)
+            } catch {}
         }
     }
 
     private var serviceStep: some View {
         ScrollView {
             VStack(spacing: 16) {
-                SectionHeader(title: "Service Details", icon: "wrench.and.screwdriver.fill")
+                GlassSectionHeader(title: "Service Details", icon: "wrench.and.screwdriver.fill")
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Description")
                         .font(.subheadline.weight(.medium))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.white.opacity(0.5))
                     TextEditor(text: $serviceDescription)
                         .frame(minHeight: 120)
                         .padding(8)
-                        .background(Theme.cardColor)
-                        .cornerRadius(12)
+                        .background(.ultraThinMaterial)
+                        .background(Color.white.opacity(0.03))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                        )
                         .scrollContentBackground(.hidden)
                 }
             }
@@ -280,20 +397,18 @@ struct IntakeWizardView: View {
     private var inspectionStep: some View {
         ScrollView {
             VStack(spacing: 16) {
-                SectionHeader(title: "Initial Inspection", icon: "checklist")
+                GlassSectionHeader(title: "Initial Inspection", icon: "checklist")
 
                 Text("An intake inspection will be created for this vehicle. You can complete it after submission.")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.white.opacity(0.5))
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                    .background(Theme.cardColor)
-                    .cornerRadius(12)
+                    .glassCard(padding: 14)
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Inspection Type")
                         .font(.subheadline.weight(.medium))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.white.opacity(0.5))
 
                     ForEach([InspectionType.intake, .cosmetic, .mechanical], id: \.self) { type in
                         Button {
@@ -301,14 +416,12 @@ struct IntakeWizardView: View {
                         } label: {
                             HStack {
                                 Image(systemName: selectedInspectionType == type ? "checkmark.circle.fill" : "circle")
-                                    .foregroundColor(selectedInspectionType == type ? Theme.accentColor : .secondary)
+                                    .foregroundColor(selectedInspectionType == type ? Theme.goldColor : .white.opacity(0.3))
                                 Text(type.rawValue.capitalized.replacingOccurrences(of: "_", with: " "))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.white.opacity(0.85))
                                 Spacer()
                             }
-                            .padding()
-                            .background(Theme.cardColor)
-                            .cornerRadius(12)
+                            .glassCard(padding: 14)
                         }
                     }
                 }
@@ -318,24 +431,25 @@ struct IntakeWizardView: View {
     }
 }
 
-// MARK: - Form Components
+// MARK: - Glass Form Components
 
-private struct SectionHeader: View {
+private struct GlassSectionHeader: View {
     let title: String
     let icon: String
 
     var body: some View {
         HStack {
             Image(systemName: icon)
-                .foregroundColor(Theme.accentColor)
+                .foregroundColor(Theme.goldColor)
             Text(title)
                 .font(.headline)
+                .foregroundColor(.white.opacity(0.9))
             Spacer()
         }
     }
 }
 
-private struct FormField: View {
+private struct GlassFormField: View {
     let label: String
     @Binding var text: String
     var placeholder: String = ""
@@ -345,12 +459,17 @@ private struct FormField: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.subheadline.weight(.medium))
-                .foregroundColor(.secondary)
+                .foregroundColor(.white.opacity(0.5))
             TextField(placeholder, text: $text)
                 .keyboardType(keyboardType)
                 .padding()
-                .background(Theme.cardColor)
-                .cornerRadius(12)
+                .background(.ultraThinMaterial)
+                .background(Color.white.opacity(0.03))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                )
                 .foregroundColor(.white)
         }
     }

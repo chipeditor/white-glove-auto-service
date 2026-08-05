@@ -23,9 +23,9 @@ struct MainTabView: View {
                     Label("Dashboard", systemImage: "square.grid.2x2.fill")
                 }
 
-            VehicleListView()
+            ScheduleView()
                 .tabItem {
-                    Label("Vehicles", systemImage: "car.fill")
+                    Label("Schedule", systemImage: "calendar")
                 }
 
             ServiceRequestListView()
@@ -33,14 +33,14 @@ struct MainTabView: View {
                     Label("Work Orders", systemImage: "wrench.and.screwdriver.fill")
                 }
 
-            AppointmentsView()
+            CustomersView()
                 .tabItem {
-                    Label("Appointments", systemImage: "calendar.badge.clock")
+                    Label("Customers", systemImage: "person.2.fill")
                 }
 
-            NotificationCenterView()
+            SettingsView()
                 .tabItem {
-                    Label("Notifications", systemImage: "bell.fill")
+                    Label("More", systemImage: "ellipsis.circle.fill")
                 }
         }
         .tint(Theme.goldColor)

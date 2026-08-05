@@ -38,6 +38,12 @@
 		A1000053 /* DamageMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000053 /* DamageMapView.swift */; };
 		A1000050 /* ServiceRequestListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000050 /* ServiceRequestListView.swift */; };
 		A1000051 /* ServiceRequestDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000051 /* ServiceRequestDetailView.swift */; };
+		A1000080 /* ScheduleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000080 /* ScheduleView.swift */; };
+		A1000081 /* HealthBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000081 /* HealthBoardView.swift */; };
+		A1000082 /* EstimateBuilderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000082 /* EstimateBuilderView.swift */; };
+		A1000083 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000083 /* SettingsView.swift */; };
+		A1000084 /* CustomersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000084 /* CustomersView.swift */; };
+		A1000085 /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000085 /* GlassCard.swift */; };
 		A1000060 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = C1000001 /* Supabase */; };
 		A1000061 /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = C1000002 /* Dependencies */; };
 		A1000070 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B1000060 /* Assets.xcassets */; };
@@ -76,6 +82,12 @@
 		B1000050 /* ServiceRequestListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceRequestListView.swift; sourceTree = "<group>"; };
 		B1000051 /* ServiceRequestDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceRequestDetailView.swift; sourceTree = "<group>"; };
 		B1000060 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B1000080 /* ScheduleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleView.swift; sourceTree = "<group>"; };
+		B1000081 /* HealthBoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthBoardView.swift; sourceTree = "<group>"; };
+		B1000082 /* EstimateBuilderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EstimateBuilderView.swift; sourceTree = "<group>"; };
+		B1000083 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B1000084 /* CustomersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomersView.swift; sourceTree = "<group>"; };
+		B1000085 /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
 		D1000001 /* WhiteGlove.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WhiteGlove.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -156,6 +168,11 @@
 				F1000018 /* ServiceRequests */,
 				F1000019 /* Appointments */,
 				F100001A /* DamageMap */,
+				F100001B /* Schedule */,
+				F100001C /* HealthBoard */,
+				F100001D /* Estimates */,
+				F100001E /* Settings */,
+				F100001F /* Customers */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -263,6 +280,46 @@
 			path = Appointments;
 			sourceTree = "<group>";
 		};
+		F100001B /* Schedule */ = {
+			isa = PBXGroup;
+			children = (
+				B1000080 /* ScheduleView.swift */,
+			);
+			path = Schedule;
+			sourceTree = "<group>";
+		};
+		F100001C /* HealthBoard */ = {
+			isa = PBXGroup;
+			children = (
+				B1000081 /* HealthBoardView.swift */,
+			);
+			path = HealthBoard;
+			sourceTree = "<group>";
+		};
+		F100001D /* Estimates */ = {
+			isa = PBXGroup;
+			children = (
+				B1000082 /* EstimateBuilderView.swift */,
+			);
+			path = Estimates;
+			sourceTree = "<group>";
+		};
+		F100001E /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				B1000083 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		F100001F /* Customers */ = {
+			isa = PBXGroup;
+			children = (
+				B1000084 /* CustomersView.swift */,
+			);
+			path = Customers;
+			sourceTree = "<group>";
+		};
 		F1000020 /* Common */ = {
 			isa = PBXGroup;
 			children = (
@@ -271,6 +328,7 @@
 				B1000042 /* EmptyStateView.swift */,
 				B1000043 /* LoadingView.swift */,
 				B1000048 /* VINScannerView.swift */,
+				B1000085 /* GlassCard.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -423,6 +481,12 @@
 				A1000051 /* ServiceRequestDetailView.swift in Sources */,
 				A1000052 /* AppointmentsView.swift in Sources */,
 				A1000053 /* DamageMapView.swift in Sources */,
+				A1000080 /* ScheduleView.swift in Sources */,
+				A1000081 /* HealthBoardView.swift in Sources */,
+				A1000082 /* EstimateBuilderView.swift in Sources */,
+				A1000083 /* SettingsView.swift in Sources */,
+				A1000084 /* CustomersView.swift in Sources */,
+				A1000085 /* GlassCard.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

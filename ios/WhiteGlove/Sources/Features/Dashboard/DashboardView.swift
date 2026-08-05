@@ -21,15 +21,14 @@ struct DashboardView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    // Greeting
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Welcome back,")
                                 .font(.subheadline)
-                                .foregroundColor(Theme.text2Color)
+                                .foregroundColor(.white.opacity(0.5))
                             Text(authService.currentUser?.fullName ?? "Team")
                                 .font(.title2.bold())
-                                .foregroundColor(Theme.textColor)
+                                .foregroundColor(.white.opacity(0.95))
                         }
                         Spacer()
                         Image(systemName: "person.circle.fill")
@@ -38,13 +37,12 @@ struct DashboardView: View {
                     }
                     .padding(.horizontal)
 
-                    // Stat Cards
                     LazyVGrid(columns: [
-                        GridItem(.flexible(), spacing: 12),
-                        GridItem(.flexible(), spacing: 12),
-                    ], spacing: 12) {
+                        GridItem(.flexible(), spacing: 10),
+                        GridItem(.flexible(), spacing: 10),
+                    ], spacing: 10) {
                         ForEach(Array(stats.enumerated()), id: \.offset) { _, stat in
-                            StatCard(
+                            GlassStatCard(
                                 title: stat.title,
                                 value: stat.value,
                                 icon: stat.icon,
@@ -54,12 +52,11 @@ struct DashboardView: View {
                     }
                     .padding(.horizontal)
 
-                    // Recent Vehicles
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             Text("Recent Vehicles")
                                 .font(.headline)
-                                .foregroundColor(Theme.textColor)
+                                .foregroundColor(.white.opacity(0.9))
                             Spacer()
                             NavigationLink {
                                 VehicleListView()
@@ -89,7 +86,12 @@ struct DashboardView: View {
                 }
                 .padding(.vertical)
             }
-            .background(Theme.bgColor.ignoresSafeArea())
+            .background(
+                LinearGradient(
+                    colors: [Color(hex: "#0d0d18"), Color(hex: "#111125")],
+                    startPoint: .top, endPoint: .bottom
+                ).ignoresSafeArea()
+            )
             .navigationTitle("Dashboard")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -97,7 +99,7 @@ struct DashboardView: View {
                         Task { await authService.signOut() }
                     } label: {
                         Image(systemName: "rectangle.portrait.and.arrow.right")
-                            .foregroundColor(Theme.text2Color)
+                            .foregroundColor(.white.opacity(0.5))
                     }
                 }
             }
@@ -120,9 +122,9 @@ struct DashboardView: View {
     }
 }
 
-// MARK: - Stat Card
+// MARK: - Glass Stat Card
 
-private struct StatCard: View {
+private struct GlassStatCard: View {
     let title: String
     let value: String
     let icon: String
@@ -138,18 +140,12 @@ private struct StatCard: View {
             }
             Text(value)
                 .font(.system(size: 28, weight: .bold, design: .rounded))
-                .foregroundColor(Theme.textColor)
+                .foregroundColor(.white.opacity(0.95))
             Text(title)
                 .font(.caption)
-                .foregroundColor(Theme.text2Color)
+                .foregroundColor(.white.opacity(0.5))
         }
-        .padding()
-        .background(Theme.cardColor)
-        .cornerRadius(16)
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Theme.borderColor, lineWidth: 1)
-        )
+        .glassCard()
     }
 }
 

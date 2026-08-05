@@ -400,6 +400,178 @@ final class SupabaseService: DataProvider {
             .eq("read", value: "false")
             .execute()
     }
+
+    // MARK: - Line Items
+
+    func fetchLineItems(serviceRequestId: UUID) async throws -> [RepairOrderLine] {
+        let data = try await client
+            .from("repair_order_lines")
+            .select()
+            .eq("service_request_id", value: serviceRequestId.uuidString)
+            .order("sort_order")
+            .execute()
+            .value as Data
+        return try JSONDecoder.supabase.decode([RepairOrderLine].self, from: data)
+    }
+
+    func createLineItem(serviceRequestId: UUID, organizationId: UUID, lineType: LineItemType, description: String, quantity: Double, unitPrice: Double) async throws -> RepairOrderLine {
+        let total = quantity * unitPrice
+        let payload: [String: String] = [
+            "service_request_id": serviceRequestId.uuidString,
+            "organization_id": organizationId.uuidString,
+            "line_type": lineType.rawValue,
+            "description": description,
+            "quantity": "\(quantity)",
+            "unit_price": "\(unitPrice)",
+            "discount_amount": "0",
+            "total": "\(total)",
+            "status": "pending",
+        ]
+        let data = try await client
+            .from("repair_order_lines")
+            .insert(payload)
+            .select()
+            .single()
+            .execute()
+            .value as Data
+        return try JSONDecoder.supabase.decode(RepairOrderLine.self, from: data)
+    }
+
+    func deleteLineItem(id: UUID) async throws {
+        try await client
+            .from("repair_order_lines")
+            .delete()
+            .eq("id", value: id.uuidString)
+            .execute()
+    }
+
+    // MARK: - Canned Jobs
+
+    func fetchCannedJobs(organizationId: UUID) async throws -> [CannedJob] {
+        let data = try await client
+            .from("canned_jobs")
+            .select()
+            .eq("organization_id", value: organizationId.uuidString)
+            .eq("is_active", value: "true")
+            .order("sort_order")
+            .execute()
+            .value as Data
+        return try JSONDecoder.supabase.decode([CannedJob].self, from: data)
+    }
+
+    func createCannedJob(organizationId: UUID, name: String, description: String?, category: CannedJobCategory, laborHours: Double, laborRate: Double, partsCost: Double) async throws -> CannedJob {
+        let totalEstimate = (laborHours * laborRate) + partsCost
+        var payload: [String: String] = [
+            "organization_id": organizationId.uuidString,
+            "name": name,
+            "category": category.rawValue,
+            "labor_hours": "\(laborHours)",
+            "labor_rate": "\(laborRate)",
+            "parts_cost": "\(partsCost)",
+            "total_estimate": "\(totalEstimate)",
+            "is_active": "true",
+            "sort_order": "0",
+        ]
+        if let description { payload["description"] = description }
+        let data = try await client
+            .from("canned_jobs")
+            .insert(payload)
+            .select()
+            .single()
+            .execute()
+            .value as Data
+        return try JSONDecoder.supabase.decode(CannedJob.self, from: data)
+    }
+
+    func deleteCannedJob(id: UUID) async throws {
+        try await client
+            .from("canned_jobs")
+            .delete()
+            .eq("id", value: id.uuidString)
+            .execute()
+    }
+
+    // MARK: - Health Board
+
+    func fetchHealthBoard(organizationId: UUID) async throws -> HealthBoardData {
+        let data = try await client
+            .from("service_requests")
+            .select("*, vehicles(year, make, model), technician:users!technician_id(full_name)")
+            .eq("organization_id", value: organizationId.uuidString)
+            .not("status", operator: .in, value: "(completed,declined)")
+            .order("created_at", ascending: false)
+            .execute()
+            .value as Data
+
+        struct RawSR: Decodable {
+            let id: UUID
+            let title: String
+            let status: ServiceRequestStatus
+            let phase: WorkPhase?
+            let healthStatus: HealthStatus?
+            let estimatedCompletion: Date?
+            let promisedAt: Date?
+            let vehicles: VehicleRef?
+            let technician: TechRef?
+
+            struct VehicleRef: Decodable { let year: Int?; let make: String?; let model: String? }
+            struct TechRef: Decodable { let fullName: String?; enum CodingKeys: String, CodingKey { case fullName = "full_name" } }
+
+            enum CodingKeys: String, CodingKey {
+                case id, title, status, phase, vehicles, technician
+                case healthStatus = "health_status"
+                case estimatedCompletion = "estimated_completion"
+                case promisedAt = "promised_at"
+            }
+        }
+
+        let rawSRs = try JSONDecoder.supabase.decode([RawSR].self, from: data)
+
+        var techLanes: [String: [HealthBoardSR]] = [:]
+        var atRisk = 0
+        var aging = 0
+        let now = Date()
+
+        for sr in rawSRs {
+            let hbsr = HealthBoardSR(
+                id: sr.id, title: sr.title, status: sr.status,
+                phase: sr.phase, healthStatus: sr.healthStatus,
+                estimatedCompletion: sr.estimatedCompletion, promisedAt: sr.promisedAt,
+                vehicleYear: sr.vehicles?.year, vehicleMake: sr.vehicles?.make,
+                vehicleModel: sr.vehicles?.model,
+                technicianName: sr.technician?.fullName, remainingHours: nil
+            )
+            let techName = sr.technician?.fullName ?? "Unassigned"
+            techLanes[techName, default: []].append(hbsr)
+
+            if sr.healthStatus == .atRisk || sr.healthStatus == .blocked { atRisk += 1 }
+            if let created = sr.estimatedCompletion, now.timeIntervalSince(created) > 5 * 86400 { aging += 1 }
+        }
+
+        let lanes = techLanes.map { TechLane(name: $0.key, jobs: $0.value, capacity: 8, utilized: Double($0.value.count) * 2) }
+        let onTime = rawSRs.isEmpty ? 100 : Int(Double(rawSRs.count - atRisk) / Double(rawSRs.count) * 100)
+        let pulse = ShopPulse(onTimePercent: onTime, vehiclesActive: rawSRs.count, atRiskCount: atRisk, agingCount: aging, comebackCount: 0)
+
+        return HealthBoardData(pulse: pulse, lanes: lanes.sorted { $0.name < $1.name })
+    }
+
+    // MARK: - Staff
+
+    func fetchStaff(organizationId: UUID) async throws -> [User] {
+        let data = try await client
+            .from("memberships")
+            .select("user_id, users(id, email, full_name, avatar_url, role, created_at)")
+            .eq("organization_id", value: organizationId.uuidString)
+            .eq("is_active", value: "true")
+            .execute()
+            .value as Data
+
+        struct MembershipWithUser: Decodable {
+            let users: User
+        }
+        let memberships = try JSONDecoder.supabase.decode([MembershipWithUser].self, from: data)
+        return memberships.map(\.users)
+    }
 }
 
 // MARK: - JSON Decoder
