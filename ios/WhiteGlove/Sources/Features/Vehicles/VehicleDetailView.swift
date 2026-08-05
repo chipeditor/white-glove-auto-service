@@ -78,7 +78,7 @@ struct VehicleDetailView: View {
                 case 3: ChecklistView(vehicleId: vehicle.id)
                 case 4: DeliveryChecklistView(vehicle: vehicle)
                 case 5: FilesTab(mediaAssets: mediaAssets, onRefresh: loadData)
-                case 6: HistoryTab()
+                case 6: HistoryTab(vehicleId: vehicle.id)
                 default: OverviewTab(vehicle: vehicle, onRefresh: loadData)
                 }
             }
@@ -312,7 +312,90 @@ private struct FilesTab: View {
 }
 
 private struct HistoryTab: View {
+    let vehicleId: UUID
+    @EnvironmentObject var authService: AuthService
+    @State private var events: [AuditEvent] = []
+    @State private var isLoading = true
+
     var body: some View {
-        EmptyStateView(icon: "clock.fill", title: "History", message: "Vehicle activity history will appear here.")
+        Group {
+            if isLoading {
+                LoadingView()
+            } else if events.isEmpty {
+                EmptyStateView(icon: "clock.fill", title: "No History", message: "No activity recorded for this vehicle yet.")
+            } else {
+                ScrollView {
+                    VStack(spacing: 0) {
+                        ForEach(Array(events.enumerated()), id: \.element.id) { index, event in
+                            HStack(alignment: .top, spacing: 12) {
+                                VStack(spacing: 0) {
+                                    Circle()
+                                        .fill(Color(hex: event.action.color))
+                                        .frame(width: 32, height: 32)
+                                        .overlay {
+                                            Image(systemName: event.action.icon)
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.white)
+                                        }
+                                    if index < events.count - 1 {
+                                        Rectangle()
+                                            .fill(Theme.borderColor)
+                                            .frame(width: 2)
+                                            .frame(maxHeight: .infinity)
+                                    }
+                                }
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(event.action.displayName)
+                                        .font(.subheadline.weight(.semibold))
+                                    Text(eventDetail(event))
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text(event.createdAt.formatted(date: .abbreviated, time: .shortened))
+                                        .font(.caption2)
+                                        .foregroundColor(Theme.mutedColor)
+                                }
+                                .padding(.bottom, 20)
+
+                                Spacer()
+                            }
+                        }
+                    }
+                    .padding()
+                }
+                .refreshable { await loadEvents() }
+            }
+        }
+        .task { await loadEvents() }
+    }
+
+    private func loadEvents() async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            events = try await authService.dataProvider.fetchAuditEvents(
+                entityType: "vehicle", entityId: vehicleId
+            )
+        } catch {
+            events = []
+        }
+    }
+
+    private func eventDetail(_ event: AuditEvent) -> String {
+        if let changes = event.changes {
+            if let from = changes["from"]?.value as? String,
+               let to = changes["to"]?.value as? String {
+                let clean: (String) -> String = { $0.replacingOccurrences(of: "_", with: " ").capitalized }
+                return "\(clean(from)) → \(clean(to))"
+            }
+        }
+        if let metadata = event.metadata {
+            let parts = metadata.compactMap { key, val -> String? in
+                guard let s = val.value as? String else { return nil }
+                return "\(key): \(s)"
+            }
+            if !parts.isEmpty { return parts.joined(separator: ", ") }
+        }
+        return event.entityType.capitalized
     }
 }

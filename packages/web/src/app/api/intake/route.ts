@@ -1,4 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { emitEvent } from '@/lib/events';
+import { sendEmail, vehicleCheckedInEmail } from '@/lib/email';
 
 const INTAKE_SECTIONS = [
   { name: 'Exterior Front', items: ['Hood', 'Bumper', 'Grille', 'Headlights', 'Windshield'] },
@@ -142,6 +144,40 @@ export async function POST(request: Request) {
       }));
       await supabase.from('inspection_items').insert(items);
     }
+  }
+
+  await emitEvent({
+    action: 'created',
+    entityType: 'service_request',
+    entityId: sr.id,
+    organizationId: orgId,
+    actorId: user.id,
+    metadata: { source: 'intake_wizard', vehicleId: vehicle.id, inspectionId: inspection.id },
+  });
+
+  await emitEvent({
+    action: 'vehicle_checked_in',
+    entityType: 'vehicle',
+    entityId: vehicle.id,
+    organizationId: orgId,
+    actorId: user.id,
+    changes: { make: body.make, model: body.model, year: body.year, vin: body.vin },
+  });
+
+  // Email customer confirming vehicle check-in
+  if (body.customerEmail?.trim()) {
+    const { data: org } = await supabase.from('organizations').select('name, phone').eq('id', orgId).single();
+    const vehicleName = `${body.year || ''} ${body.make || ''} ${body.model || ''}`.trim() || 'Your vehicle';
+    await sendEmail({
+      to: body.customerEmail.trim(),
+      subject: `Vehicle Received — ${vehicleName}`,
+      html: vehicleCheckedInEmail({
+        customerName: body.customerName?.trim() || 'Valued Customer',
+        vehicleName,
+        shopName: org?.name,
+        shopPhone: org?.phone,
+      }),
+    });
   }
 
   return Response.json({

@@ -13,6 +13,7 @@ import {
   Users,
   BarChart3,
   CalendarDays,
+  CalendarCheck,
   Bell,
   Settings,
   LogOut,
@@ -35,6 +36,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/checklists', label: 'Checklists', icon: CheckSquare, roles: ['super_admin', 'shop_admin', 'service_advisor', 'technician', 'delivery_specialist'] },
   { href: '/customers', label: 'Customers', icon: Users, roles: ['super_admin', 'shop_admin', 'service_advisor'] },
   { href: '/schedule', label: 'Schedule', icon: CalendarDays, roles: ['super_admin', 'shop_admin', 'service_advisor', 'technician'] },
+  { href: '/appointments', label: 'Appointments', icon: CalendarCheck, roles: ['super_admin', 'shop_admin', 'service_advisor'] },
   { href: '/reports', label: 'Reports', icon: BarChart3, roles: ['super_admin', 'shop_admin', 'service_advisor'] },
 ];
 
@@ -62,7 +64,7 @@ function getInitials(name: string | undefined | null): string {
     .slice(0, 2);
 }
 
-export function Sidebar() {
+export function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean; onClose?: () => void } = {}) {
   const pathname = usePathname();
   const router = useRouter();
   const { profile, role } = useAuth();
@@ -75,7 +77,7 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-[260px] bg-wg-bg2 border-r border-wg-border flex flex-col z-40">
+    <aside className={`fixed left-0 top-0 bottom-0 w-[260px] bg-wg-bg2 border-r border-wg-border flex flex-col z-50 transition-transform duration-200 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
       <div className="p-4 pb-3">
         <Link href="/dashboard" className="block">
           <Image
@@ -96,6 +98,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={clsx(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
                 active
@@ -117,6 +120,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={clsx(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
                 active

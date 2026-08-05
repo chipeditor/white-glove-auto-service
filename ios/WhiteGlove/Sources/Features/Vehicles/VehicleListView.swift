@@ -68,6 +68,15 @@ struct VehicleListView: View {
             .background(Theme.bgColor.ignoresSafeArea())
             .navigationTitle("Vehicles")
             .searchable(text: $searchText, prompt: "Search vehicles...")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink {
+                        IntakeWizardView()
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
             .task {
                 await loadVehicles()
             }

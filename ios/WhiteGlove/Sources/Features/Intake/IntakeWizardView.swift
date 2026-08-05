@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct IntakeWizardView: View {
+    @EnvironmentObject var authService: AuthService
     @State private var currentStep = 0
     @State private var make = ""
     @State private var model = ""
@@ -14,6 +15,9 @@ struct IntakeWizardView: View {
     @State private var selectedInspectionType: InspectionType = .intake
     @State private var showVINScanner = false
     @State private var isDecodingVIN = false
+    @State private var isSubmitting = false
+    @State private var showSuccess = false
+    @State private var submitError: String?
 
     private let steps = ["Vehicle", "Customer", "Service", "Inspection"]
 
@@ -54,10 +58,13 @@ struct IntakeWizardView: View {
                         if currentStep < steps.count - 1 {
                             withAnimation { currentStep += 1 }
                         } else {
-                            // Submit
+                            Task { await submitIntake() }
                         }
                     } label: {
                         HStack {
+                            if isSubmitting {
+                                ProgressView().tint(.white)
+                            }
                             Text(currentStep == steps.count - 1 ? "Submit" : "Next")
                             if currentStep < steps.count - 1 {
                                 Image(systemName: "chevron.right")
@@ -69,12 +76,87 @@ struct IntakeWizardView: View {
                         .foregroundColor(.white)
                         .cornerRadius(12)
                     }
+                    .disabled(isSubmitting)
                 }
                 .padding()
             }
             .background(Theme.bgColor.ignoresSafeArea())
             .navigationTitle("New Intake")
+            .alert("Intake Submitted", isPresented: $showSuccess) {
+                Button("OK") { resetForm() }
+            } message: {
+                Text("Vehicle and service request have been created successfully.")
+            }
+            .alert("Error", isPresented: .init(
+                get: { submitError != nil },
+                set: { if !$0 { submitError = nil } }
+            )) {
+                Button("OK") { submitError = nil }
+            } message: {
+                Text(submitError ?? "")
+            }
         }
+    }
+
+    private func submitIntake() async {
+        guard !make.isEmpty, !model.isEmpty else {
+            submitError = "Please enter at least the vehicle make and model."
+            return
+        }
+
+        isSubmitting = true
+        defer { isSubmitting = false }
+
+        let orgId = MockDataProvider.orgId
+
+        do {
+            let customer: Customer
+            if !customerName.isEmpty {
+                customer = try await authService.dataProvider.createCustomer(
+                    Customer(
+                        id: UUID(), organizationId: orgId,
+                        fullName: customerName,
+                        email: customerEmail.isEmpty ? nil : customerEmail,
+                        phone: customerPhone.isEmpty ? nil : customerPhone,
+                        address: nil, createdAt: Date()
+                    )
+                )
+            } else {
+                customer = Customer(id: UUID(), organizationId: orgId, fullName: "Walk-in", email: nil, phone: nil, address: nil, createdAt: Date())
+            }
+
+            let vehicle = try await authService.dataProvider.createVehicle(
+                Vehicle(
+                    id: UUID(), organizationId: orgId, customerId: customer.id,
+                    vin: vin.isEmpty ? nil : vin,
+                    year: Int(year), make: make, model: model,
+                    color: color.isEmpty ? nil : color,
+                    licensePlate: nil, mileage: nil,
+                    status: .intakeStarted, notes: nil,
+                    createdAt: Date(), updatedAt: Date()
+                )
+            )
+
+            let title = "\(selectedInspectionType.rawValue.capitalized) — \(vehicle.displayName)"
+            _ = try await authService.dataProvider.createServiceRequest(
+                vehicleId: vehicle.id,
+                organizationId: orgId,
+                title: title,
+                description: serviceDescription.isEmpty ? nil : serviceDescription
+            )
+
+            showSuccess = true
+        } catch {
+            submitError = error.localizedDescription
+        }
+    }
+
+    private func resetForm() {
+        currentStep = 0
+        make = ""; model = ""; year = ""; vin = ""; color = ""
+        customerName = ""; customerEmail = ""; customerPhone = ""
+        serviceDescription = ""
+        selectedInspectionType = .intake
     }
 
     // MARK: - Steps

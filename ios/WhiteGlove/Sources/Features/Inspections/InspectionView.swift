@@ -11,6 +11,8 @@ struct InspectionView: View {
     @State private var isSaving = false
     @State private var showCompleteAlert = false
     @State private var errorMessage: String?
+    @State private var damageMarkers: [DamageMapMarker] = []
+    @State private var showDamageMap = true
 
     var body: some View {
         NavigationStack {
@@ -21,7 +23,14 @@ struct InspectionView: View {
                     EmptyStateView(icon: "checklist", title: "No Sections", message: "This inspection has no sections yet.")
                 } else {
                     sectionTabs
-                    sectionContent
+                    if showDamageMap {
+                        ScrollView {
+                            DamageMapView(markers: $damageMarkers)
+                                .padding()
+                        }
+                    } else {
+                        sectionContent
+                    }
                 }
             }
             .background(Theme.bgColor.ignoresSafeArea())
@@ -54,11 +63,29 @@ struct InspectionView: View {
     private var sectionTabs: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 4) {
+                Button {
+                    withAnimation { showDamageMap = true }
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: "mappin.and.ellipse")
+                            .font(.title3)
+                        Text("Damage")
+                            .font(.caption2.weight(.medium))
+                        Text("\(damageMarkers.count)")
+                            .font(.system(size: 9).weight(.medium))
+                            .foregroundColor(damageMarkers.isEmpty ? .secondary : Theme.alertColor)
+                    }
+                    .frame(width: 76, height: 72)
+                    .background(showDamageMap ? Theme.accentColor : Theme.cardColor)
+                    .foregroundColor(showDamageMap ? .white : .secondary)
+                    .cornerRadius(12)
+                }
+
                 ForEach(Array(sections.enumerated()), id: \.offset) { index, section in
                     let itemCount = section.items?.count ?? 0
                     let passedCount = section.items?.filter({ $0.passed != nil }).count ?? 0
                     Button {
-                        withAnimation { selectedSection = index }
+                        withAnimation { selectedSection = index; showDamageMap = false }
                     } label: {
                         VStack(spacing: 4) {
                             Image(systemName: iconForSection(section.name))
@@ -70,8 +97,8 @@ struct InspectionView: View {
                                 .foregroundColor(passedCount == itemCount && itemCount > 0 ? Theme.greenColor : .secondary)
                         }
                         .frame(width: 76, height: 72)
-                        .background(selectedSection == index ? Theme.accentColor : Theme.cardColor)
-                        .foregroundColor(selectedSection == index ? .white : .secondary)
+                        .background(selectedSection == index && !showDamageMap ? Theme.accentColor : Theme.cardColor)
+                        .foregroundColor(selectedSection == index && !showDamageMap ? .white : .secondary)
                         .cornerRadius(12)
                     }
                 }

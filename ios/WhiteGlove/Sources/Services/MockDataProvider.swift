@@ -104,7 +104,7 @@ final class MockDataProvider: DataProvider {
 
     // MARK: - Service Requests
 
-    let serviceRequests: [ServiceRequest] = [
+    var serviceRequests: [ServiceRequest] = [
         ServiceRequest(id: sr1Id, vehicleId: veh1Id, organizationId: orgId,
                        title: "Performance inspection and delivery verification",
                        description: "Full performance inspection including engine, brakes, suspension, and delivery prep.",
@@ -264,6 +264,33 @@ final class MockDataProvider: DataProvider {
             createdAt: ago(2880)),
     ]
 
+    // MARK: - Audit Events
+
+    private static func mockAuditEvents(vehicleId: UUID) -> [AuditEvent] {
+        [
+            AuditEvent(id: UUID(), organizationId: orgId, actorId: userAdvisorId,
+                       action: .created, entityType: "vehicle", entityId: vehicleId,
+                       changes: nil, metadata: nil, createdAt: ago(72)),
+            AuditEvent(id: UUID(), organizationId: orgId, actorId: userTechId,
+                       action: .inspectionStarted, entityType: "vehicle", entityId: vehicleId,
+                       changes: nil, metadata: ["type": AnyCodable("intake")], createdAt: ago(70)),
+            AuditEvent(id: UUID(), organizationId: orgId, actorId: userTechId,
+                       action: .inspectionCompleted, entityType: "vehicle", entityId: vehicleId,
+                       changes: nil, metadata: nil, createdAt: ago(68)),
+            AuditEvent(id: UUID(), organizationId: orgId, actorId: userAdvisorId,
+                       action: .statusChanged, entityType: "vehicle", entityId: vehicleId,
+                       changes: ["from": AnyCodable("intake_completed"), "to": AnyCodable("awaiting_approval")],
+                       metadata: nil, createdAt: ago(48)),
+            AuditEvent(id: UUID(), organizationId: orgId, actorId: nil,
+                       action: .approved, entityType: "vehicle", entityId: vehicleId,
+                       changes: nil, metadata: ["method": AnyCodable("sms")], createdAt: ago(24)),
+            AuditEvent(id: UUID(), organizationId: orgId, actorId: userMechId,
+                       action: .statusChanged, entityType: "vehicle", entityId: vehicleId,
+                       changes: ["from": AnyCodable("awaiting_approval"), "to": AnyCodable("in_service")],
+                       metadata: nil, createdAt: ago(20)),
+        ]
+    }
+
     // MARK: - Notifications
 
     var notifications: [Notification] = [
@@ -388,6 +415,17 @@ final class MockDataProvider: DataProvider {
         return sr
     }
 
+    func createServiceRequest(vehicleId: UUID, organizationId: UUID, title: String, description: String?) async throws -> ServiceRequest {
+        try await Task.sleep(nanoseconds: 300_000_000)
+        let sr = ServiceRequest(
+            id: UUID(), vehicleId: vehicleId, organizationId: organizationId,
+            title: title, description: description, status: .submitted,
+            priority: 1, estimatedCompletion: nil, actualCompletion: nil, createdAt: Date()
+        )
+        serviceRequests.append(sr)
+        return sr
+    }
+
     func fetchInspections(vehicleId: UUID) async throws -> [Inspection] {
         return inspections.filter { $0.vehicleId == vehicleId }
     }
@@ -464,6 +502,39 @@ final class MockDataProvider: DataProvider {
         }
     }
 
+    func fetchAppointments(organizationId: UUID) async throws -> [Appointment] {
+        try await Task.sleep(nanoseconds: 200_000_000)
+        return [
+            Appointment(id: UUID(), organizationId: organizationId,
+                        customerName: "Sarah Williams", customerEmail: "sarah@example.com",
+                        customerPhone: "(310) 555-0102", serviceType: "Oil Change",
+                        description: "Routine oil change and filter replacement",
+                        scheduledDate: "2026-08-06", scheduledTime: "09:00",
+                        durationMinutes: 30, status: .scheduled, notes: nil, createdAt: Date()),
+            Appointment(id: UUID(), organizationId: organizationId,
+                        customerName: "Mike Johnson", customerEmail: "mike@example.com",
+                        customerPhone: "(310) 555-0103", serviceType: "Brake Inspection",
+                        description: "Front and rear brake inspection",
+                        scheduledDate: "2026-08-06", scheduledTime: "10:30",
+                        durationMinutes: 60, status: .confirmed, notes: nil, createdAt: Date()),
+            Appointment(id: UUID(), organizationId: organizationId,
+                        customerName: "John Smith", customerEmail: "john@example.com",
+                        customerPhone: "(310) 555-0101", serviceType: "Full Detail",
+                        description: nil,
+                        scheduledDate: "2026-08-07", scheduledTime: "08:00",
+                        durationMinutes: 120, status: .scheduled, notes: nil, createdAt: Date()),
+        ]
+    }
+
+    func updateAppointmentStatus(id: UUID, status: AppointmentStatus) async throws {
+        try await Task.sleep(nanoseconds: 200_000_000)
+    }
+
+    func fetchAuditEvents(entityType: String, entityId: UUID) async throws -> [AuditEvent] {
+        try await Task.sleep(nanoseconds: 200_000_000)
+        return Self.mockAuditEvents(vehicleId: entityId)
+    }
+
     func fetchNotifications(userId: UUID) async throws -> [Notification] {
         try await Task.sleep(nanoseconds: 200_000_000)
         return notifications
@@ -475,6 +546,17 @@ final class MockDataProvider: DataProvider {
         if let idx = notifications.firstIndex(where: { $0.id == id }) {
             let old = notifications[idx]
             notifications[idx] = Notification(
+                id: old.id, userId: old.userId, type: old.type,
+                title: old.title, body: old.body, read: true,
+                vehicleId: old.vehicleId, createdAt: old.createdAt
+            )
+        }
+    }
+
+    func markAllNotificationsRead(userId: UUID) async throws {
+        for i in notifications.indices where notifications[i].userId == userId && !notifications[i].read {
+            let old = notifications[i]
+            notifications[i] = Notification(
                 id: old.id, userId: old.userId, type: old.type,
                 title: old.title, body: old.body, read: true,
                 vehicleId: old.vehicleId, createdAt: old.createdAt

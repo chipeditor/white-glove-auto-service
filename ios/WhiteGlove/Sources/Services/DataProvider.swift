@@ -25,6 +25,7 @@ protocol DataProvider {
     // Service Requests
     func fetchServiceRequests(organizationId: UUID) async throws -> [ServiceRequest]
     func fetchServiceRequest(id: UUID) async throws -> ServiceRequest
+    func createServiceRequest(vehicleId: UUID, organizationId: UUID, title: String, description: String?) async throws -> ServiceRequest
 
     // Inspections
     func fetchInspections(vehicleId: UUID) async throws -> [Inspection]
@@ -41,7 +42,15 @@ protocol DataProvider {
     func fetchChecklists(vehicleId: UUID) async throws -> [Checklist]
     func updateChecklistItem(id: UUID, completed: Bool) async throws
 
+    // Appointments
+    func fetchAppointments(organizationId: UUID) async throws -> [Appointment]
+    func updateAppointmentStatus(id: UUID, status: AppointmentStatus) async throws
+
+    // Audit Events
+    func fetchAuditEvents(entityType: String, entityId: UUID) async throws -> [AuditEvent]
+
     // Notifications
     func fetchNotifications(userId: UUID) async throws -> [Notification]
     func markNotificationRead(id: UUID) async throws
+    func markAllNotificationsRead(userId: UUID) async throws
 }

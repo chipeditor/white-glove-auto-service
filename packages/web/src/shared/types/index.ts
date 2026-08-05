@@ -73,7 +73,27 @@ export type AuditAction =
   | 'uploaded'
   | 'approved'
   | 'declined'
-  | 'flagged';
+  | 'flagged'
+  | 'vehicle_checked_in'
+  | 'technician_assigned'
+  | 'inspection_started'
+  | 'inspection_completed'
+  | 'estimate_created'
+  | 'approval_sent'
+  | 'customer_approved'
+  | 'customer_declined'
+  | 'repair_started'
+  | 'repair_completed'
+  | 'parts_requested'
+  | 'parts_received'
+  | 'qc_started'
+  | 'qc_passed'
+  | 'ready_for_pickup'
+  | 'vehicle_delivered'
+  | 'photo_captured'
+  | 'note_added'
+  | 'pressure_test_completed'
+  | 'road_test_completed';
 
 // ===========================================
 // Base

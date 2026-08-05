@@ -10,12 +10,9 @@ final class SupabaseService: DataProvider {
     let client: SupabaseClient
 
     private init() {
-        let supabaseURL = URL(string: ProcessInfo.processInfo.environment["SUPABASE_URL"] ?? "https://your-project.supabase.co")!
-        let supabaseKey = ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"] ?? "your-anon-key"
-
         client = SupabaseClient(
-            supabaseURL: supabaseURL,
-            supabaseKey: supabaseKey
+            supabaseURL: SupabaseConfig.url,
+            supabaseKey: SupabaseConfig.anonKey
         )
     }
 
@@ -172,6 +169,26 @@ final class SupabaseService: DataProvider {
         return try JSONDecoder.supabase.decode(ServiceRequest.self, from: data)
     }
 
+    func createServiceRequest(vehicleId: UUID, organizationId: UUID, title: String, description: String?) async throws -> ServiceRequest {
+        let payload: [String: String] = [
+            "vehicle_id": vehicleId.uuidString,
+            "organization_id": organizationId.uuidString,
+            "title": title,
+            "description": description ?? "",
+            "status": "submitted",
+            "priority": "1",
+        ].compactMapValues { $0 }
+
+        let data = try await client
+            .from("service_requests")
+            .insert(payload)
+            .select()
+            .single()
+            .execute()
+            .value as Data
+        return try JSONDecoder.supabase.decode(ServiceRequest.self, from: data)
+    }
+
     // MARK: - Inspections
 
     func fetchInspections(vehicleId: UUID) async throws -> [Inspection] {
@@ -316,6 +333,43 @@ final class SupabaseService: DataProvider {
             .execute()
     }
 
+    // MARK: - Appointments
+
+    func fetchAppointments(organizationId: UUID) async throws -> [Appointment] {
+        let data = try await client
+            .from("appointments")
+            .select()
+            .eq("organization_id", value: organizationId.uuidString)
+            .order("scheduled_date", ascending: true)
+            .order("scheduled_time", ascending: true)
+            .execute()
+            .value as Data
+        return try JSONDecoder.supabase.decode([Appointment].self, from: data)
+    }
+
+    func updateAppointmentStatus(id: UUID, status: AppointmentStatus) async throws {
+        try await client
+            .from("appointments")
+            .update(["status": status.rawValue])
+            .eq("id", value: id.uuidString)
+            .execute()
+    }
+
+    // MARK: - Audit Events
+
+    func fetchAuditEvents(entityType: String, entityId: UUID) async throws -> [AuditEvent] {
+        let data = try await client
+            .from("audit_events")
+            .select()
+            .eq("entity_type", value: entityType)
+            .eq("entity_id", value: entityId.uuidString)
+            .order("created_at", ascending: false)
+            .limit(50)
+            .execute()
+            .value as Data
+        return try JSONDecoder.supabase.decode([AuditEvent].self, from: data)
+    }
+
     // MARK: - Notifications
 
     func fetchNotifications(userId: UUID) async throws -> [Notification] {
@@ -335,6 +389,15 @@ final class SupabaseService: DataProvider {
             .from("notifications")
             .update(["read": "true", "read_at": ISO8601DateFormatter().string(from: Date())])
             .eq("id", value: id.uuidString)
+            .execute()
+    }
+
+    func markAllNotificationsRead(userId: UUID) async throws {
+        try await client
+            .from("notifications")
+            .update(["read": "true", "read_at": ISO8601DateFormatter().string(from: Date())])
+            .eq("user_id", value: userId.uuidString)
+            .eq("read", value: "false")
             .execute()
     }
 }

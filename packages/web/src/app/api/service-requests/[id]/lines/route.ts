@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { emitEvent } from '@/lib/events';
 
 export async function POST(
   request: NextRequest,
@@ -33,6 +34,16 @@ export async function POST(
   if (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
+
+  await emitEvent({
+    action: 'estimate_created',
+    entityType: 'service_request',
+    entityId: id,
+    organizationId: body.organization_id,
+    actorId: user.id,
+    changes: { description: body.description, quantity: body.quantity, unit_price: body.unit_price },
+    metadata: { lineId: line.id, lineType: body.line_type },
+  });
 
   return Response.json({ line });
 }

@@ -1,8 +1,20 @@
 'use client';
 
-import { useState } from 'react';
-import { Wrench, Package, ArrowRight, Tag, Minus, Plus, Trash2, Send, MessageSquare, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Wrench, Package, ArrowRight, Tag, Minus, Plus, Trash2, Send, MessageSquare, Check, BookTemplate } from 'lucide-react';
+import { createClient } from '@/lib/supabase';
 import type { RepairOrderLine, ServiceRequestWithDetails, LineItemType } from '@/shared/types';
+
+interface CannedJob {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  labor_hours: number | null;
+  labor_rate: number | null;
+  parts_cost: number | null;
+  total_estimate: number | null;
+}
 
 const TYPE_ICONS: Record<string, typeof Wrench> = {
   labor: Wrench,
@@ -50,6 +62,8 @@ export function ServiceRequestLineItems({ lines: initialLines, sr }: Props) {
   const [newLine, setNewLine] = useState<NewLine>({ line_type: 'labor', description: '', quantity: 1, unit_price: 0 });
   const [isAdding, setIsAdding] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [cannedJobs, setCannedJobs] = useState<CannedJob[]>([]);
+  const [showTemplates, setShowTemplates] = useState(false);
   const [isSendingApproval, setIsSendingApproval] = useState(false);
   const [approvalUrl, setApprovalUrl] = useState<string | null>(null);
   const [showSmsDialog, setShowSmsDialog] = useState(false);
@@ -58,6 +72,60 @@ export function ServiceRequestLineItems({ lines: initialLines, sr }: Props) {
   const [smsSuccess, setSmsSuccess] = useState(false);
 
   const subtotal = lines.filter(l => l.status !== 'declined').reduce((sum, l) => sum + l.total, 0);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from('canned_jobs')
+      .select('id, name, description, category, labor_hours, labor_rate, parts_cost, total_estimate')
+      .eq('organization_id', sr.organization_id)
+      .eq('is_active', true)
+      .order('sort_order')
+      .then(({ data }) => setCannedJobs(data ?? []));
+  }, [sr.organization_id]);
+
+  async function addFromTemplate(job: CannedJob) {
+    setShowTemplates(false);
+    const laborTotal = (job.labor_hours ?? 0) * (job.labor_rate ?? 0);
+    const linesToAdd: Array<{ line_type: LineItemType; description: string; quantity: number; unit_price: number }> = [];
+
+    if (laborTotal > 0) {
+      linesToAdd.push({
+        line_type: 'labor',
+        description: `${job.name}${job.description ? ' — ' + job.description : ''}`,
+        quantity: job.labor_hours ?? 1,
+        unit_price: job.labor_rate ?? 0,
+      });
+    }
+    if ((job.parts_cost ?? 0) > 0) {
+      linesToAdd.push({
+        line_type: 'parts',
+        description: `${job.name} — Parts`,
+        quantity: 1,
+        unit_price: job.parts_cost ?? 0,
+      });
+    }
+    if (linesToAdd.length === 0) {
+      linesToAdd.push({
+        line_type: 'labor',
+        description: job.name,
+        quantity: 1,
+        unit_price: job.total_estimate ?? 0,
+      });
+    }
+
+    for (const item of linesToAdd) {
+      const res = await fetch(`/api/service-requests/${sr.id}/lines`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ service_request_id: sr.id, organization_id: sr.organization_id, ...item }),
+      });
+      if (res.ok) {
+        const { line } = await res.json();
+        setLines(prev => [...prev, line]);
+      }
+    }
+  }
 
   async function addLine() {
     if (!newLine.description || newLine.unit_price <= 0) return;
@@ -152,6 +220,32 @@ export function ServiceRequestLineItems({ lines: initialLines, sr }: Props) {
           <h3 className="text-sm font-medium text-wg-text">Estimate / Line Items</h3>
           <div className="flex items-center gap-2">
             <span className="text-xs text-wg-muted">{lines.length} items</span>
+            <div className="relative">
+              <button
+                onClick={() => setShowTemplates(!showTemplates)}
+                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-wg-gold bg-wg-gold/10 rounded-md hover:bg-wg-gold/20 transition-colors"
+              >
+                <BookTemplate size={12} />
+                Templates
+              </button>
+              {showTemplates && cannedJobs.length > 0 && (
+                <div className="absolute right-0 top-full mt-1 w-72 bg-wg-card border border-wg-border rounded-lg shadow-xl z-20 max-h-64 overflow-y-auto">
+                  {cannedJobs.map(job => (
+                    <button
+                      key={job.id}
+                      onClick={() => addFromTemplate(job)}
+                      className="w-full text-left px-3 py-2.5 hover:bg-wg-bg2 transition-colors border-b border-wg-border last:border-0"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-wg-text font-medium">{job.name}</span>
+                        <span className="text-xs text-wg-gold tabular-nums">{formatCurrency(job.total_estimate ?? 0)}</span>
+                      </div>
+                      <span className="text-[10px] text-wg-muted">{job.category}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button
               onClick={() => setShowAddForm(!showAddForm)}
               className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-wg-blue bg-wg-blue/10 rounded-md hover:bg-wg-blue/20 transition-colors"

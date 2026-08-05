@@ -1,10 +1,13 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Car, User, DollarSign, FileText, Printer } from 'lucide-react';
+import { Car, User, DollarSign, FileText, Printer, Truck } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { ActivityTimeline } from '@/components/ui/ActivityTimeline';
+import { FileUpload } from '@/components/ui/FileUpload';
 import { fetchServiceRequest } from '@/lib/queries';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 import type { ServiceRequestStatus } from '@/shared/types';
 import { ServiceRequestLineItems } from './line-items';
 
@@ -53,6 +56,49 @@ export default async function ServiceRequestDetailPage({
   const sr = await fetchServiceRequest(id);
 
   if (!sr) notFound();
+
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: events } = await supabase
+    .from('audit_events')
+    .select('*')
+    .eq('entity_type', 'service_request')
+    .eq('entity_id', id)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  const vehicleId = sr.vehicle?.id;
+  const { data: mediaAssets } = vehicleId
+    ? await supabase
+        .from('media_assets')
+        .select('*')
+        .eq('vehicle_id', vehicleId)
+        .order('created_at', { ascending: false })
+    : { data: [] };
+
+  const { data: membership } = await supabase
+    .from('memberships')
+    .select('organization_id')
+    .eq('user_id', user?.id ?? '')
+    .eq('is_active', true)
+    .limit(1)
+    .single();
+  const orgId = membership?.organization_id || sr.organization_id;
+
+  const actorIds = [...new Set((events ?? []).map(e => e.actor_id).filter(Boolean))] as string[];
+  let actorMap: Record<string, string> = {};
+  if (actorIds.length > 0) {
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, full_name')
+      .in('id', actorIds);
+    actorMap = Object.fromEntries((users ?? []).map(u => [u.id, u.full_name]));
+  }
+
+  const timelineEvents = (events ?? []).map(e => ({
+    ...e,
+    actor_name: e.actor_id ? actorMap[e.actor_id] : undefined,
+  }));
 
   const currentIdx = STATUS_PIPELINE.indexOf(sr.status);
   const isDeclined = sr.status === 'declined';
@@ -131,6 +177,26 @@ export default async function ServiceRequestDetailPage({
 
             {/* Line Items */}
             <ServiceRequestLineItems lines={sr.lines} sr={sr} />
+
+            {/* Photos & Files */}
+            {vehicleId && (
+              <div className="bg-wg-card rounded-xl border border-wg-border p-5">
+                <h3 className="text-sm font-medium text-wg-text mb-4">Photos &amp; Files</h3>
+                <FileUpload
+                  vehicleId={vehicleId}
+                  organizationId={orgId}
+                  existingFiles={mediaAssets ?? []}
+                />
+              </div>
+            )}
+
+            {/* Activity Timeline */}
+            {timelineEvents.length > 0 && (
+              <div className="bg-wg-card rounded-xl border border-wg-border p-5">
+                <h3 className="text-sm font-medium text-wg-text mb-4">Activity</h3>
+                <ActivityTimeline events={timelineEvents} />
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -228,6 +294,13 @@ export default async function ServiceRequestDetailPage({
               >
                 <Printer size={14} />
                 Print Receipt
+              </Link>
+              <Link
+                href={`/delivery/${id}`}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-wg-bg2 hover:bg-wg-input text-sm text-wg-text2 hover:text-wg-text transition-colors"
+              >
+                <Truck size={14} />
+                Delivery Checklist
               </Link>
             </div>
 

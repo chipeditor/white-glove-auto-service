@@ -11,13 +11,15 @@ final class AuthService: ObservableObject {
     /// The active data provider — MockDataProvider for demo, SupabaseService for production.
     let dataProvider: DataProvider
 
-    /// Current organization ID (from membership, hardcoded for demo)
+    /// Resolved from memberships table on sign-in; falls back to hardcoded org for mock mode
+    @Published private(set) var resolvedOrgId: UUID?
+
     var organizationId: UUID {
-        MockDataProvider.orgId
+        resolvedOrgId ?? MockDataProvider.orgId
     }
 
-    /// Set to true to use mock data (no Supabase connection needed)
-    static let useMockData = true
+    /// Set to false for live Supabase, true for offline demo mode
+    static let useMockData = false
 
     init() {
         if Self.useMockData {
@@ -38,6 +40,7 @@ final class AuthService: ObservableObject {
             if let user = try await dataProvider.getCurrentUser() {
                 currentUser = user
                 isAuthenticated = true
+                await resolveOrganization(userId: user.id)
             }
         } catch {
             isAuthenticated = false
@@ -54,6 +57,7 @@ final class AuthService: ObservableObject {
             let user = try await dataProvider.signIn(email: email, password: password)
             currentUser = user
             isAuthenticated = true
+            await resolveOrganization(userId: user.id)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -64,8 +68,39 @@ final class AuthService: ObservableObject {
             try await dataProvider.signOut()
             currentUser = nil
             isAuthenticated = false
+            resolvedOrgId = nil
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func resolveOrganization(userId: UUID) async {
+        if Self.useMockData {
+            resolvedOrgId = MockDataProvider.orgId
+            return
+        }
+        guard let service = dataProvider as? SupabaseService else { return }
+        do {
+            let data = try await service.client
+                .from("memberships")
+                .select("organization_id")
+                .eq("user_id", value: userId.uuidString)
+                .eq("is_active", value: "true")
+                .limit(1)
+                .single()
+                .execute()
+                .value as Data
+
+            struct MembershipRow: Decodable {
+                let organizationId: UUID
+                enum CodingKeys: String, CodingKey {
+                    case organizationId = "organization_id"
+                }
+            }
+            let row = try JSONDecoder().decode(MembershipRow.self, from: data)
+            resolvedOrgId = row.organizationId
+        } catch {
+            resolvedOrgId = MockDataProvider.orgId
         }
     }
 }

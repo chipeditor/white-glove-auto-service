@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
-import { Building2, Users, Shield } from 'lucide-react';
+import { Building2, Users, Shield, Wrench } from 'lucide-react';
 
 const TABS = [
   { href: '/settings/organization', label: 'Organization', icon: Building2 },
   { href: '/settings/team', label: 'Team', icon: Users },
+  { href: '/settings/canned-jobs', label: 'Service Templates', icon: Wrench },
   { href: '/settings/audit-log', label: 'Audit Log', icon: Shield },
 ];
 

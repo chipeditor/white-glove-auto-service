@@ -1,5 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { createClient } from '@supabase/supabase-js';
+import { emitEvent } from '@/lib/events';
+import { sendEmail, teamInviteEmail } from '@/lib/email';
 
 export async function POST(request: Request) {
   const supabase = await createServerSupabaseClient();
@@ -57,6 +59,42 @@ export async function POST(request: Request) {
     organization_id: organizationId,
     role,
     is_active: true,
+  });
+
+  await emitEvent({
+    action: 'assigned',
+    entityType: 'membership',
+    entityId: authUser.user.id,
+    organizationId,
+    actorId: user.id,
+    changes: { email, fullName, role },
+  });
+
+  // Email the invited team member
+  const { data: inviterUser } = await supabase
+    .from('users')
+    .select('full_name')
+    .eq('id', user.id)
+    .single();
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('name')
+    .eq('id', organizationId)
+    .single();
+  const host = request.headers.get('host') ?? '';
+  const proto = request.headers.get('x-forwarded-proto') ?? 'https';
+  const loginUrl = `${proto}://${host}/login`;
+
+  await sendEmail({
+    to: email,
+    subject: `You've been invited to ${org?.name || 'the team'}`,
+    html: teamInviteEmail({
+      inviteeName: fullName,
+      inviterName: inviterUser?.full_name || 'An administrator',
+      role: role.replace(/_/g, ' '),
+      loginUrl,
+      shopName: org?.name,
+    }),
   });
 
   return Response.json({ success: true, userId: authUser.user.id });

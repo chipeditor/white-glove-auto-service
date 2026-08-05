@@ -21,6 +21,10 @@ struct NotificationCenterView: View {
         }
     }
 
+    private var unreadCount: Int {
+        notifications.filter { !$0.read }.count
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -30,9 +34,20 @@ struct NotificationCenterView: View {
                             withAnimation { selectedTab = index }
                         } label: {
                             VStack(spacing: 8) {
-                                Text(tab)
-                                    .font(.subheadline.weight(selectedTab == index ? .semibold : .regular))
-                                    .foregroundColor(selectedTab == index ? Theme.textColor : Theme.text2Color)
+                                HStack(spacing: 4) {
+                                    Text(tab)
+                                        .font(.subheadline.weight(selectedTab == index ? .semibold : .regular))
+                                        .foregroundColor(selectedTab == index ? Theme.textColor : Theme.text2Color)
+                                    if index == 1 && unreadCount > 0 {
+                                        Text("\(unreadCount)")
+                                            .font(.caption2.weight(.bold))
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 5)
+                                            .padding(.vertical, 1)
+                                            .background(Theme.alertColor)
+                                            .cornerRadius(8)
+                                    }
+                                }
                                 Rectangle()
                                     .fill(selectedTab == index ? Theme.goldColor : .clear)
                                     .frame(height: 2)
@@ -56,20 +71,43 @@ struct NotificationCenterView: View {
                     ScrollView {
                         LazyVStack(spacing: 8) {
                             ForEach(filteredNotifications) { notification in
-                                NotificationRow(notification: notification)
+                                if let vehicleId = notification.vehicleId {
+                                    NavigationLink {
+                                        VehicleDetailLoader(vehicleId: vehicleId)
+                                    } label: {
+                                        NotificationRow(notification: notification)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .simultaneousGesture(TapGesture().onEnded {
+                                        if !notification.read {
+                                            Task { await markRead(notification) }
+                                        }
+                                    })
+                                } else {
+                                    NotificationRow(notification: notification)
+                                        .onTapGesture {
+                                            if !notification.read {
+                                                Task { await markRead(notification) }
+                                            }
+                                        }
+                                }
                             }
                         }
                         .padding()
                     }
+                    .refreshable { await loadNotifications() }
                 }
             }
             .background(Theme.bgColor.ignoresSafeArea())
             .navigationTitle("Notifications")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Mark All Read") {}
-                        .font(.caption)
-                        .foregroundColor(Theme.goldColor)
+                    Button("Mark All Read") {
+                        Task { await markAllRead() }
+                    }
+                    .font(.caption)
+                    .foregroundColor(Theme.goldColor)
+                    .disabled(unreadCount == 0)
                 }
             }
             .task {
@@ -86,6 +124,54 @@ struct NotificationCenterView: View {
             notifications = try await authService.dataProvider.fetchNotifications(userId: userId)
         } catch {
             notifications = []
+        }
+    }
+
+    private func markRead(_ notification: Notification) async {
+        try? await authService.dataProvider.markNotificationRead(id: notification.id)
+        if let idx = notifications.firstIndex(where: { $0.id == notification.id }) {
+            let old = notifications[idx]
+            notifications[idx] = Notification(
+                id: old.id, userId: old.userId, type: old.type,
+                title: old.title, body: old.body, read: true,
+                vehicleId: old.vehicleId, createdAt: old.createdAt
+            )
+        }
+    }
+
+    private func markAllRead() async {
+        guard let userId = authService.currentUser?.id else { return }
+        try? await authService.dataProvider.markAllNotificationsRead(userId: userId)
+        notifications = notifications.map {
+            Notification(id: $0.id, userId: $0.userId, type: $0.type,
+                         title: $0.title, body: $0.body, read: true,
+                         vehicleId: $0.vehicleId, createdAt: $0.createdAt)
+        }
+    }
+}
+
+// MARK: - Vehicle Detail Loader
+
+private struct VehicleDetailLoader: View {
+    let vehicleId: UUID
+    @EnvironmentObject var authService: AuthService
+    @State private var vehicle: Vehicle?
+    @State private var isLoading = true
+
+    var body: some View {
+        Group {
+            if isLoading {
+                LoadingView()
+            } else if let vehicle {
+                VehicleDetailView(vehicle: vehicle)
+            } else {
+                EmptyStateView(icon: "car.fill", title: "Not Found", message: "Vehicle could not be loaded.")
+            }
+        }
+        .task {
+            isLoading = true
+            defer { isLoading = false }
+            vehicle = try? await authService.dataProvider.fetchVehicle(id: vehicleId)
         }
     }
 }
@@ -144,10 +230,23 @@ private struct NotificationRow: View {
                     .font(.caption)
                     .foregroundColor(Theme.text2Color)
                     .lineLimit(2)
+                    .multilineTextAlignment(.leading)
 
-                Text(timeAgo)
-                    .font(.caption2)
-                    .foregroundColor(Theme.mutedColor)
+                HStack(spacing: 4) {
+                    Text(timeAgo)
+                        .font(.caption2)
+                        .foregroundColor(Theme.mutedColor)
+                    if notification.vehicleId != nil {
+                        Spacer()
+                        HStack(spacing: 2) {
+                            Text("View")
+                                .font(.caption2)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 8))
+                        }
+                        .foregroundColor(Theme.goldColor)
+                    }
+                }
             }
         }
         .padding()

@@ -125,6 +125,50 @@ enum NotificationType: String, Codable, Sendable {
     case reportReady = "report_ready"
 }
 
+enum AppointmentStatus: String, Codable, Sendable, CaseIterable {
+    case scheduled = "scheduled"
+    case confirmed = "confirmed"
+    case checkedIn = "checked_in"
+    case inProgress = "in_progress"
+    case completed = "completed"
+    case cancelled = "cancelled"
+    case noShow = "no_show"
+
+    var displayName: String {
+        switch self {
+        case .scheduled: return "Scheduled"
+        case .confirmed: return "Confirmed"
+        case .checkedIn: return "Checked In"
+        case .inProgress: return "In Progress"
+        case .completed: return "Completed"
+        case .cancelled: return "Cancelled"
+        case .noShow: return "No Show"
+        }
+    }
+
+    var statusColor: String {
+        switch self {
+        case .scheduled: return Theme.blue
+        case .confirmed: return Theme.green
+        case .checkedIn: return Theme.gold
+        case .inProgress: return "#e89040"
+        case .completed: return Theme.green
+        case .cancelled: return Theme.red
+        case .noShow: return Theme.muted
+        }
+    }
+
+    var nextActions: [AppointmentStatus] {
+        switch self {
+        case .scheduled: return [.confirmed, .cancelled]
+        case .confirmed: return [.checkedIn, .cancelled, .noShow]
+        case .checkedIn: return [.inProgress, .cancelled]
+        case .inProgress: return [.completed]
+        default: return []
+        }
+    }
+}
+
 enum DamageSeverity: String, Codable, Sendable {
     case minor = "minor"
     case moderate = "moderate"
@@ -404,6 +448,144 @@ struct Notification: Codable, Identifiable, Sendable {
         case userId = "user_id"
         case vehicleId = "vehicle_id"
         case createdAt = "created_at"
+    }
+}
+
+struct Appointment: Codable, Identifiable, Sendable {
+    let id: UUID
+    let organizationId: UUID
+    let customerName: String
+    let customerEmail: String?
+    let customerPhone: String?
+    let serviceType: String
+    let description: String?
+    let scheduledDate: String
+    let scheduledTime: String
+    let durationMinutes: Int
+    var status: AppointmentStatus
+    let notes: String?
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id, description, status, notes
+        case organizationId = "organization_id"
+        case customerName = "customer_name"
+        case customerEmail = "customer_email"
+        case customerPhone = "customer_phone"
+        case serviceType = "service_type"
+        case scheduledDate = "scheduled_date"
+        case scheduledTime = "scheduled_time"
+        case durationMinutes = "duration_minutes"
+        case createdAt = "created_at"
+    }
+}
+
+// MARK: - Audit Events
+
+enum AuditAction: String, Codable, Sendable {
+    case created, updated, deleted
+    case statusChanged = "status_changed"
+    case assigned, signed, uploaded, approved, declined, flagged
+    case inspectionCompleted = "inspection_completed"
+    case inspectionStarted = "inspection_started"
+    case itemPassed = "item_passed"
+    case itemFailed = "item_failed"
+    case smsSent = "sms_sent"
+    case appointmentBooked = "appointment_booked"
+    case appointmentCancelled = "appointment_cancelled"
+    case lineItemAdded = "line_item_added"
+    case lineItemRemoved = "line_item_removed"
+    case invoiceGenerated = "invoice_generated"
+    case paymentReceived = "payment_received"
+
+    var displayName: String {
+        rawValue.replacingOccurrences(of: "_", with: " ").capitalized
+    }
+
+    var icon: String {
+        switch self {
+        case .created: return "plus.circle.fill"
+        case .updated: return "pencil.circle.fill"
+        case .deleted: return "trash.circle.fill"
+        case .statusChanged: return "arrow.triangle.2.circlepath"
+        case .assigned: return "person.badge.plus"
+        case .signed: return "signature"
+        case .uploaded: return "arrow.up.circle.fill"
+        case .approved: return "checkmark.circle.fill"
+        case .declined: return "xmark.circle.fill"
+        case .flagged: return "flag.fill"
+        case .inspectionCompleted: return "checkmark.seal.fill"
+        case .inspectionStarted: return "play.circle.fill"
+        case .itemPassed: return "checkmark.square.fill"
+        case .itemFailed: return "xmark.square.fill"
+        case .smsSent: return "message.fill"
+        case .appointmentBooked: return "calendar.badge.plus"
+        case .appointmentCancelled: return "calendar.badge.minus"
+        case .lineItemAdded: return "plus.rectangle.fill"
+        case .lineItemRemoved: return "minus.rectangle.fill"
+        case .invoiceGenerated: return "doc.text.fill"
+        case .paymentReceived: return "dollarsign.circle.fill"
+        }
+    }
+
+    var color: String {
+        switch self {
+        case .created, .approved, .inspectionCompleted, .itemPassed, .paymentReceived:
+            return Theme.green
+        case .deleted, .declined, .itemFailed, .flagged, .appointmentCancelled:
+            return Theme.red
+        case .statusChanged, .assigned, .inspectionStarted, .appointmentBooked:
+            return Theme.blue
+        case .uploaded, .smsSent, .lineItemAdded, .lineItemRemoved, .invoiceGenerated:
+            return Theme.gold
+        case .updated, .signed:
+            return Theme.text2
+        }
+    }
+}
+
+struct AuditEvent: Codable, Identifiable, Sendable {
+    let id: UUID
+    let organizationId: UUID
+    let actorId: UUID?
+    let action: AuditAction
+    let entityType: String
+    let entityId: UUID
+    let changes: [String: AnyCodable]?
+    let metadata: [String: AnyCodable]?
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id, action, changes, metadata
+        case organizationId = "organization_id"
+        case actorId = "actor_id"
+        case entityType = "entity_type"
+        case entityId = "entity_id"
+        case createdAt = "created_at"
+    }
+}
+
+struct AnyCodable: Codable, Sendable {
+    let value: Any
+
+    init(_ value: Any) { self.value = value }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let s = try? container.decode(String.self) { value = s }
+        else if let i = try? container.decode(Int.self) { value = i }
+        else if let d = try? container.decode(Double.self) { value = d }
+        else if let b = try? container.decode(Bool.self) { value = b }
+        else { value = (try? container.decode(String.self)) ?? "" }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        if let s = value as? String { try container.encode(s) }
+        else if let i = value as? Int { try container.encode(i) }
+        else if let d = value as? Double { try container.encode(d) }
+        else if let b = value as? Bool { try container.encode(b) }
+        else { try container.encode(String(describing: value)) }
     }
 }
 

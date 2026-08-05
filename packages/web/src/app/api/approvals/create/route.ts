@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { emitEvent } from '@/lib/events';
+import { sendEmail, approvalRequestEmail } from '@/lib/email';
 import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
@@ -46,6 +48,55 @@ export async function POST(request: NextRequest) {
   const proto = request.headers.get('x-forwarded-proto') ?? 'https';
   const appUrl = `${proto}://${host}`;
   const approvalUrl = `${appUrl}/approve/${token}`;
+
+  await emitEvent({
+    action: 'approval_sent',
+    entityType: 'service_request',
+    entityId: serviceRequestId,
+    organizationId,
+    actorId: user.id,
+    metadata: { approvalId: approval.id, expiresAt },
+  });
+
+  // Send approval email to customer
+  if (customerId) {
+    const { data: customer } = await supabase
+      .from('customers')
+      .select('full_name, email')
+      .eq('id', customerId)
+      .single();
+
+    if (customer?.email) {
+      const { data: sr } = await supabase
+        .from('service_requests')
+        .select('title, vehicle_id')
+        .eq('id', serviceRequestId)
+        .single();
+      const { data: vehicle } = sr?.vehicle_id
+        ? await supabase.from('vehicles').select('year, make, model').eq('id', sr.vehicle_id).single()
+        : { data: null };
+      const { data: lines } = await supabase
+        .from('service_request_lines')
+        .select('total')
+        .eq('service_request_id', serviceRequestId);
+      const total = (lines || []).reduce((s: number, l: { total: number }) => s + (l.total || 0), 0);
+      const { data: org } = await supabase.from('organizations').select('name').eq('id', organizationId).single();
+
+      const vehicleName = vehicle ? `${vehicle.year || ''} ${vehicle.make} ${vehicle.model}`.trim() : sr?.title || 'Vehicle';
+
+      await sendEmail({
+        to: customer.email,
+        subject: `Estimate Ready — ${vehicleName}`,
+        html: approvalRequestEmail({
+          customerName: customer.full_name,
+          vehicleName,
+          totalAmount: `$${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+          approvalUrl,
+          shopName: org?.name,
+        }),
+      });
+    }
+  }
 
   return Response.json({
     success: true,

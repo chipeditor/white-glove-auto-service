@@ -33,9 +33,9 @@ struct MainTabView: View {
                     Label("Work Orders", systemImage: "wrench.and.screwdriver.fill")
                 }
 
-            IntakeWizardView()
+            AppointmentsView()
                 .tabItem {
-                    Label("Intake", systemImage: "plus.circle.fill")
+                    Label("Appointments", systemImage: "calendar.badge.clock")
                 }
 
             NotificationCenterView()
