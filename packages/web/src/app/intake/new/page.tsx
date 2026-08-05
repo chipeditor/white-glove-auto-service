@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { ProgressStepper } from '@/components/ui/ProgressStepper';
 import { Button } from '@/components/ui/Button';
-import { X, MoreVertical, ScanLine } from 'lucide-react';
+import { X, MoreVertical, ScanLine, Camera, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 const STEPS = [
@@ -14,8 +14,152 @@ const STEPS = [
   { label: 'Inspection', key: 'inspection' },
 ];
 
+const INPUT = 'w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text focus:outline-none focus:border-wg-blue/50';
+
 export default function NewIntakePage() {
   const [step, setStep] = useState(0);
+
+  const [vin, setVin] = useState('');
+  const [year, setYear] = useState('');
+  const [make, setMake] = useState('');
+  const [model, setModel] = useState('');
+  const [trim, setTrim] = useState('');
+  const [color, setColor] = useState('');
+  const [mileage, setMileage] = useState('');
+  const [plate, setPlate] = useState('');
+  const [plateState, setPlateState] = useState('');
+
+  const [customerName, setCustomerName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+
+  const [serviceType, setServiceType] = useState('Performance Inspection');
+  const [description, setDescription] = useState('');
+
+  const [scanning, setScanning] = useState(false);
+  const [decoding, setDecoding] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const animFrameRef = useRef<number>(0);
+
+  const stopScanner = useCallback(() => {
+    setScanning(false);
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+    cancelAnimationFrame(animFrameRef.current);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+      }
+      cancelAnimationFrame(animFrameRef.current);
+    };
+  }, []);
+
+  async function decodeVIN(vinValue: string) {
+    if (vinValue.length !== 17) return;
+    setDecoding(true);
+    try {
+      const res = await fetch(`/api/vin-decode?vin=${encodeURIComponent(vinValue)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.year) setYear(data.year);
+      if (data.make) setMake(data.make);
+      if (data.model) setModel(data.model);
+      if (data.trim) setTrim(data.trim);
+    } catch {
+      // ignore decode errors
+    } finally {
+      setDecoding(false);
+    }
+  }
+
+  function handleVinChange(value: string) {
+    const cleaned = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 17);
+    setVin(cleaned);
+    if (cleaned.length === 17) {
+      decodeVIN(cleaned);
+    }
+  }
+
+  async function startScanner() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+      });
+      streamRef.current = stream;
+      setScanning(true);
+
+      await new Promise<void>((resolve) => {
+        const check = () => {
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.play();
+            resolve();
+          } else {
+            requestAnimationFrame(check);
+          }
+        };
+        check();
+      });
+
+      if (!('BarcodeDetector' in window)) {
+        await scanWithCanvas(stream);
+        return;
+      }
+
+      const detector = new (window as unknown as { BarcodeDetector: new (opts: { formats: string[] }) => { detect: (src: HTMLVideoElement) => Promise<{ rawValue: string }[]> } }).BarcodeDetector({
+        formats: ['code_39', 'code_128', 'data_matrix', 'pdf417', 'qr_code'],
+      });
+
+      const scan = async () => {
+        if (!videoRef.current || !streamRef.current) return;
+        try {
+          const barcodes = await detector.detect(videoRef.current);
+          for (const barcode of barcodes) {
+            const cleaned = barcode.rawValue.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (cleaned.length === 17) {
+              setVin(cleaned);
+              stopScanner();
+              decodeVIN(cleaned);
+              return;
+            }
+          }
+        } catch {
+          // detection error, continue scanning
+        }
+        animFrameRef.current = requestAnimationFrame(scan);
+      };
+      animFrameRef.current = requestAnimationFrame(scan);
+    } catch {
+      alert('Camera access denied. Please allow camera access to scan VIN barcodes.');
+    }
+  }
+
+  async function scanWithCanvas(stream: MediaStream) {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const scan = () => {
+      if (!streamRef.current || !video.videoWidth) {
+        animFrameRef.current = requestAnimationFrame(scan);
+        return;
+      }
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0);
+      animFrameRef.current = requestAnimationFrame(scan);
+    };
+    animFrameRef.current = requestAnimationFrame(scan);
+  }
 
   const stepData = STEPS.map((s, i) => ({
     ...s,
@@ -44,86 +188,90 @@ export default function NewIntakePage() {
           <div className="bg-wg-card rounded-xl border border-wg-border p-6 space-y-4">
             <h2 className="text-base font-medium text-wg-text">Vehicle Information</h2>
 
-            <button className="flex items-center gap-2 px-4 py-3 w-full bg-wg-bg2 border border-wg-border rounded-lg text-sm text-wg-text2 hover:border-wg-blue/30 transition-colors">
-              <ScanLine size={18} />
-              Scan VIN
-            </button>
+            {scanning ? (
+              <div className="relative rounded-lg overflow-hidden bg-black">
+                <video ref={videoRef} className="w-full aspect-video object-cover" playsInline muted />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-4/5 h-20 border-2 border-[#c8a45c] rounded-lg" />
+                </div>
+                <p className="absolute bottom-4 left-0 right-0 text-center text-sm text-white/80">
+                  Point camera at VIN barcode
+                </p>
+                <button
+                  onClick={stopScanner}
+                  className="absolute top-3 right-3 px-3 py-1.5 bg-black/60 text-white text-sm rounded-lg hover:bg-black/80"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={startScanner}
+                className="flex items-center gap-2 px-4 py-3 w-full bg-wg-bg2 border border-wg-border rounded-lg text-sm text-wg-gold hover:border-wg-gold/30 transition-colors"
+              >
+                <Camera size={18} />
+                Scan VIN Barcode
+              </button>
+            )}
+
+            {decoding && (
+              <div className="flex items-center gap-2 text-sm text-wg-text2">
+                <Loader2 size={14} className="animate-spin" />
+                Decoding VIN...
+              </div>
+            )}
 
             <div>
               <label className="text-xs font-medium text-wg-text2 mb-1.5 block">VIN</label>
               <input
-                defaultValue="1G1YB2D73F5100001"
-                className="w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text focus:outline-none focus:border-wg-blue/50"
+                value={vin}
+                onChange={(e) => handleVinChange(e.target.value)}
+                placeholder="17-character VIN"
+                className={INPUT}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-medium text-wg-text2 mb-1.5 block">Year</label>
-                <input
-                  defaultValue="2015"
-                  className="w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text focus:outline-none focus:border-wg-blue/50"
-                />
+                <input value={year} onChange={(e) => setYear(e.target.value)} placeholder="e.g. 2024" className={INPUT} />
               </div>
               <div>
                 <label className="text-xs font-medium text-wg-text2 mb-1.5 block">Make</label>
-                <input
-                  defaultValue="Chevrolet"
-                  className="w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text focus:outline-none focus:border-wg-blue/50"
-                />
+                <input value={make} onChange={(e) => setMake(e.target.value)} placeholder="e.g. Mercedes-Benz" className={INPUT} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-medium text-wg-text2 mb-1.5 block">Model</label>
-                <input
-                  defaultValue="Corvette"
-                  className="w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text focus:outline-none focus:border-wg-blue/50"
-                />
+                <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="e.g. S 580" className={INPUT} />
               </div>
               <div>
                 <label className="text-xs font-medium text-wg-text2 mb-1.5 block">Trim</label>
-                <select className="w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text focus:outline-none focus:border-wg-blue/50 appearance-none">
-                  <option>Z51</option>
-                  <option>Z06</option>
-                  <option>ZR1</option>
-                  <option>Grand Sport</option>
-                </select>
+                <input value={trim} onChange={(e) => setTrim(e.target.value)} placeholder="e.g. AMG" className={INPUT} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-medium text-wg-text2 mb-1.5 block">Color</label>
-                <input
-                  defaultValue="Torch Red"
-                  className="w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text focus:outline-none focus:border-wg-blue/50"
-                />
+                <input value={color} onChange={(e) => setColor(e.target.value)} placeholder="e.g. Obsidian Black" className={INPUT} />
               </div>
               <div>
                 <label className="text-xs font-medium text-wg-text2 mb-1.5 block">Mileage</label>
-                <input
-                  defaultValue="5,312"
-                  className="w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text focus:outline-none focus:border-wg-blue/50"
-                />
+                <input value={mileage} onChange={(e) => setMileage(e.target.value)} placeholder="e.g. 5,312" className={INPUT} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-medium text-wg-text2 mb-1.5 block">License Plate</label>
-                <input
-                  defaultValue="ABC1234"
-                  className="w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text focus:outline-none focus:border-wg-blue/50"
-                />
+                <input value={plate} onChange={(e) => setPlate(e.target.value)} placeholder="e.g. ABC1234" className={INPUT} />
               </div>
               <div>
                 <label className="text-xs font-medium text-wg-text2 mb-1.5 block">State</label>
-                <input
-                  defaultValue="CA"
-                  className="w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text focus:outline-none focus:border-wg-blue/50"
-                />
+                <input value={plateState} onChange={(e) => setPlateState(e.target.value)} placeholder="e.g. CA" className={INPUT} />
               </div>
             </div>
           </div>
@@ -134,25 +282,16 @@ export default function NewIntakePage() {
             <h2 className="text-base font-medium text-wg-text">Customer Information</h2>
             <div>
               <label className="text-xs font-medium text-wg-text2 mb-1.5 block">Full Name</label>
-              <input
-                defaultValue="Mike Johnson"
-                className="w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text focus:outline-none focus:border-wg-blue/50"
-              />
+              <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Customer name" className={INPUT} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-medium text-wg-text2 mb-1.5 block">Email</label>
-                <input
-                  defaultValue="mike.johnson@email.com"
-                  className="w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text focus:outline-none focus:border-wg-blue/50"
-                />
+                <input value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder="customer@email.com" className={INPUT} />
               </div>
               <div>
                 <label className="text-xs font-medium text-wg-text2 mb-1.5 block">Phone</label>
-                <input
-                  defaultValue="(555) 123-4567"
-                  className="w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text focus:outline-none focus:border-wg-blue/50"
-                />
+                <input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="(555) 123-4567" className={INPUT} />
               </div>
             </div>
           </div>
@@ -163,7 +302,7 @@ export default function NewIntakePage() {
             <h2 className="text-base font-medium text-wg-text">Service Details</h2>
             <div>
               <label className="text-xs font-medium text-wg-text2 mb-1.5 block">Service Type</label>
-              <select className="w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text focus:outline-none focus:border-wg-blue/50 appearance-none">
+              <select value={serviceType} onChange={(e) => setServiceType(e.target.value)} className={INPUT + ' appearance-none'}>
                 <option>Performance Inspection</option>
                 <option>Routine Service</option>
                 <option>Cosmetic Repair</option>
@@ -175,8 +314,10 @@ export default function NewIntakePage() {
               <label className="text-xs font-medium text-wg-text2 mb-1.5 block">Description</label>
               <textarea
                 rows={4}
-                defaultValue="Full performance inspection including engine, brakes, suspension, and delivery prep."
-                className="w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text focus:outline-none focus:border-wg-blue/50 resize-none"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe the service needed..."
+                className={INPUT + ' resize-none'}
               />
             </div>
           </div>

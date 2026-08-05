@@ -35,7 +35,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/checklists', label: 'Checklists', icon: CheckSquare, roles: ['super_admin', 'shop_admin', 'service_advisor', 'technician', 'delivery_specialist'] },
   { href: '/customers', label: 'Customers', icon: Users, roles: ['super_admin', 'shop_admin', 'service_advisor'] },
   { href: '/schedule', label: 'Schedule', icon: CalendarDays, roles: ['super_admin', 'shop_admin', 'service_advisor', 'technician'] },
-  { href: '/reports', label: 'Reports', icon: BarChart3, roles: ['super_admin', 'shop_admin'] },
+  { href: '/reports', label: 'Reports', icon: BarChart3, roles: ['super_admin', 'shop_admin', 'service_advisor'] },
 ];
 
 const BOTTOM_ITEMS = [

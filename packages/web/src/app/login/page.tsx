@@ -4,53 +4,58 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase';
+import { User, Wrench, Shield, Monitor } from 'lucide-react';
+
+const STAFF = [
+  { name: 'Aiden', role: 'Front Desk Manager', email: 'aiden@ksbperformance.com', icon: Monitor, roleKey: 'service_advisor' },
+  { name: 'Juan', role: 'Shop Manager', email: 'juan@ksbperformance.com', icon: Shield, roleKey: 'shop_admin' },
+  { name: 'Geo', role: 'Tech', email: 'geo@ksbperformance.com', icon: Wrench, roleKey: 'technician' },
+  { name: 'James', role: 'Tech', email: 'james@ksbperformance.com', icon: Wrench, roleKey: 'technician' },
+];
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<string | null>(null);
   const router = useRouter();
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleStaffLogin(email: string) {
     setError('');
-    setLoading(true);
+    setLoading(email);
 
-    const supabase = createClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const res = await fetch('/api/test-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
 
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-      return;
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || 'Failed to set up test account');
+        setLoading(null);
+        return;
+      }
+
+      const { email: staffEmail, password } = await res.json();
+
+      const supabase = createClient();
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: staffEmail,
+        password,
+      });
+
+      if (authError) {
+        setError(authError.message);
+        setLoading(null);
+        return;
+      }
+
+      router.push('/dashboard');
+      router.refresh();
+    } catch {
+      setError('Something went wrong');
+      setLoading(null);
     }
-
-    router.push('/dashboard');
-    router.refresh();
-  }
-
-  async function handleDemoLogin() {
-    setError('');
-    setLoading(true);
-
-    const supabase = createClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email: 'juan@ksbperformance.com',
-      password: 'password123',
-    });
-
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-      return;
-    }
-
-    router.push('/dashboard');
-    router.refresh();
   }
 
   return (
@@ -68,51 +73,39 @@ export default function LoginPage() {
           />
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-wg-card rounded-2xl border border-wg-border p-6 space-y-4">
-          <div>
-            <label className="text-xs font-medium text-wg-text2 mb-1.5 block">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="john@whiteglove.com"
-              className="w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text placeholder:text-wg-muted focus:outline-none focus:border-wg-blue/50"
-              required
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-wg-text2 mb-1.5 block">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text placeholder:text-wg-muted focus:outline-none focus:border-wg-blue/50"
-              required
-            />
+        <div className="bg-wg-card rounded-2xl border border-wg-border p-6">
+          <p className="text-sm text-wg-text2 text-center mb-4">Sign in as</p>
+
+          <div className="space-y-2">
+            {STAFF.map((person) => {
+              const Icon = person.icon;
+              const isLoading = loading === person.email;
+              return (
+                <button
+                  key={person.email}
+                  onClick={() => handleStaffLogin(person.email)}
+                  disabled={loading !== null}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-wg-border bg-wg-bg2 hover:border-[#c8a45c]/40 hover:bg-wg-input transition-colors disabled:opacity-50 group"
+                >
+                  <div className="w-9 h-9 rounded-full bg-wg-card flex items-center justify-center border border-wg-border group-hover:border-[#c8a45c]/30">
+                    <Icon size={16} className="text-[#c8a45c]" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <p className="text-sm font-medium text-wg-text">{person.name}</p>
+                    <p className="text-xs text-wg-muted">{person.role}</p>
+                  </div>
+                  {isLoading && (
+                    <div className="w-4 h-4 border-2 border-[#c8a45c]/30 border-t-[#c8a45c] rounded-full animate-spin" />
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           {error && (
-            <p className="text-sm text-red-400">{error}</p>
+            <p className="text-sm text-red-400 text-center mt-4">{error}</p>
           )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full px-5 py-2.5 rounded-lg text-sm font-semibold bg-[#c8a45c] hover:bg-[#b8944c] text-[#1a1a2e] transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Signing in…' : 'Sign In'}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleDemoLogin}
-            disabled={loading}
-            className="w-full px-5 py-2.5 rounded-lg text-sm font-medium bg-wg-card border border-wg-border text-[#c8a45c] hover:bg-wg-input transition-colors disabled:opacity-50"
-          >
-            Demo Login
-          </button>
-        </form>
+        </div>
       </div>
     </div>
   );

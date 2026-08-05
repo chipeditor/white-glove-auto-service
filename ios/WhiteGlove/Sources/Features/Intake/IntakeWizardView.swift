@@ -12,6 +12,8 @@ struct IntakeWizardView: View {
     @State private var customerPhone = ""
     @State private var serviceDescription = ""
     @State private var selectedInspectionType: InspectionType = .intake
+    @State private var showVINScanner = false
+    @State private var isDecodingVIN = false
 
     private let steps = ["Vehicle", "Customer", "Service", "Inspection"]
 
@@ -81,13 +83,82 @@ struct IntakeWizardView: View {
         ScrollView {
             VStack(spacing: 16) {
                 SectionHeader(title: "Vehicle Information", icon: "car.fill")
+
+                Button {
+                    showVINScanner = true
+                } label: {
+                    HStack {
+                        Image(systemName: "barcode.viewfinder")
+                            .font(.system(size: 20))
+                        Text("Scan VIN Barcode")
+                            .font(.subheadline.weight(.medium))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Theme.cardColor)
+                    .foregroundColor(Theme.goldColor)
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Theme.goldColor.opacity(0.3), lineWidth: 1)
+                    )
+                }
+                .sheet(isPresented: $showVINScanner) {
+                    VINScannerView(scannedVIN: $vin)
+                        .ignoresSafeArea()
+                        .onChange(of: vin) { _, newVIN in
+                            if newVIN.count == 17 {
+                                decodeVIN(newVIN)
+                            }
+                        }
+                }
+
+                if isDecodingVIN {
+                    HStack(spacing: 8) {
+                        ProgressView().tint(Theme.goldColor)
+                        Text("Decoding VIN...")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                FormField(label: "VIN", text: $vin, placeholder: "17-character VIN")
+                    .autocapitalization(.allCharacters)
                 FormField(label: "Make", text: $make, placeholder: "e.g. Mercedes-Benz")
                 FormField(label: "Model", text: $model, placeholder: "e.g. S 580")
                 FormField(label: "Year", text: $year, placeholder: "e.g. 2024", keyboardType: .numberPad)
-                FormField(label: "VIN", text: $vin, placeholder: "17-character VIN")
                 FormField(label: "Color", text: $color, placeholder: "e.g. Obsidian Black")
             }
             .padding()
+        }
+    }
+
+    private func decodeVIN(_ vinValue: String) {
+        guard vinValue.count == 17 else { return }
+        isDecodingVIN = true
+
+        Task {
+            defer { isDecodingVIN = false }
+            guard let url = URL(string: "https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValuesExtended/\(vinValue)?format=json") else { return }
+            guard let (data, _) = try? await URLSession.shared.data(from: url),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let results = json["Results"] as? [[String: Any]],
+                  let r = results.first else { return }
+
+            let clean: (String?) -> String = { val in
+                guard let v = val, v != "Not Applicable", v != "N/A", !v.isEmpty else { return "" }
+                return v.trimmingCharacters(in: .whitespaces)
+            }
+
+            await MainActor.run {
+                let decoded_make = clean(r["Make"] as? String)
+                let decoded_model = clean(r["Model"] as? String)
+                let decoded_year = clean(r["ModelYear"] as? String)
+
+                if !decoded_make.isEmpty { make = decoded_make }
+                if !decoded_model.isEmpty { model = decoded_model }
+                if !decoded_year.isEmpty { year = decoded_year }
+            }
         }
     }
 
