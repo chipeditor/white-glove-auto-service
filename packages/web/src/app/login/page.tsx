@@ -7,8 +7,8 @@ import { createClient } from '@/lib/supabase';
 import { User, Wrench, Shield, Monitor } from 'lucide-react';
 
 const STAFF = [
-  { name: 'Aiden', role: 'Front Desk Manager', email: 'aiden@ksbperformance.com', icon: Monitor, roleKey: 'service_advisor' },
   { name: 'Juan', role: 'Shop Manager', email: 'juan@ksbperformance.com', icon: Shield, roleKey: 'shop_admin' },
+  { name: 'Aiden', role: 'Front Desk Manager', email: 'aiden@ksbperformance.com', icon: Monitor, roleKey: 'service_advisor' },
   { name: 'Geo', role: 'Tech', email: 'geo@ksbperformance.com', icon: Wrench, roleKey: 'technician' },
   { name: 'James', role: 'Tech', email: 'james@ksbperformance.com', icon: Wrench, roleKey: 'technician' },
 ];
