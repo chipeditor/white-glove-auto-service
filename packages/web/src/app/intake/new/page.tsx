@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import { ProgressStepper } from '@/components/ui/ProgressStepper';
 import { Button } from '@/components/ui/Button';
@@ -17,7 +18,10 @@ const STEPS = [
 const INPUT = 'w-full bg-wg-input border border-wg-border rounded-lg px-3 py-2.5 text-sm text-wg-text focus:outline-none focus:border-wg-blue/50';
 
 export default function NewIntakePage() {
+  const router = useRouter();
   const [step, setStep] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const [vin, setVin] = useState('');
   const [year, setYear] = useState('');
@@ -159,6 +163,39 @@ export default function NewIntakePage() {
       animFrameRef.current = requestAnimationFrame(scan);
     };
     animFrameRef.current = requestAnimationFrame(scan);
+  }
+
+  async function handleSubmit() {
+    if (!make.trim() || !model.trim()) {
+      setSubmitError('Vehicle make and model are required.');
+      setStep(0);
+      return;
+    }
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      const res = await fetch('/api/intake', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vin, year, make, model, trim, color, mileage, plate, plateState,
+          customerName, customerEmail, customerPhone,
+          serviceType, description,
+          inspectionType: 'intake',
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setSubmitError(data.error || 'Failed to create intake');
+        setSubmitting(false);
+        return;
+      }
+      const { serviceRequestId } = await res.json();
+      router.push(`/service-requests/${serviceRequestId}`);
+    } catch {
+      setSubmitError('Something went wrong');
+      setSubmitting(false);
+    }
   }
 
   const stepData = STEPS.map((s, i) => ({
@@ -343,17 +380,27 @@ export default function NewIntakePage() {
           </div>
         )}
 
+        {submitError && (
+          <p className="mt-4 text-sm text-red-400 text-center">{submitError}</p>
+        )}
+
         <div className="flex justify-between mt-6">
           <Button
             variant="ghost"
             onClick={() => setStep(Math.max(0, step - 1))}
-            disabled={step === 0}
+            disabled={step === 0 || submitting}
           >
             Back
           </Button>
-          <Button onClick={() => setStep(Math.min(STEPS.length - 1, step + 1))}>
-            {step === STEPS.length - 1 ? 'Start Inspection' : 'Continue'}
-          </Button>
+          {step === STEPS.length - 1 ? (
+            <Button onClick={handleSubmit} disabled={submitting}>
+              {submitting ? 'Creating...' : 'Submit & Start Inspection'}
+            </Button>
+          ) : (
+            <Button onClick={() => setStep(step + 1)}>
+              Continue
+            </Button>
+          )}
         </div>
       </div>
     </AppShell>

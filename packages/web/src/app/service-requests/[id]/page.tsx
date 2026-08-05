@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Car, User, DollarSign } from 'lucide-react';
+import { Car, User, DollarSign, FileText, Printer } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -210,6 +210,25 @@ export default async function ServiceRequestDetailPage({
                   <span className="text-xs text-wg-text2">{formatDate(sr.estimated_completion)}</span>
                 </div>
               )}
+            </div>
+
+            {/* Reports */}
+            <div className="bg-wg-card rounded-xl border border-wg-border p-4 space-y-2">
+              <span className="text-sm font-medium text-wg-text">Documents</span>
+              <Link
+                href={`/reports/estimate/${id}`}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-wg-bg2 hover:bg-wg-input text-sm text-wg-text2 hover:text-wg-text transition-colors"
+              >
+                <FileText size={14} />
+                View Estimate
+              </Link>
+              <Link
+                href={`/reports/receipt/${id}`}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-wg-bg2 hover:bg-wg-input text-sm text-wg-text2 hover:text-wg-text transition-colors"
+              >
+                <Printer size={14} />
+                Print Receipt
+              </Link>
             </div>
 
             {/* Totals */}
