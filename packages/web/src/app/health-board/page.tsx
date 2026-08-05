@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import {
   Activity,
   AlertTriangle,
+  ArrowLeft,
   CheckCircle2,
   Clock,
   Gauge,
@@ -147,9 +149,13 @@ export default function HealthBoardPage() {
     <div className="min-h-screen bg-[#0d0d14] p-5 flex flex-col gap-4 overflow-hidden">
       {/* Pulse Row */}
       <div className="flex gap-3 items-stretch">
-        <div className="flex items-center gap-2 px-3 shrink-0">
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2 px-3 shrink-0 group"
+        >
+          <ArrowLeft size={16} className="text-[#6b6b7a] opacity-0 group-hover:opacity-100 transition-opacity" />
           <span className="text-[#c8a45c] font-semibold text-lg tracking-wide">KSB</span>
-        </div>
+        </Link>
 
         <PulseCard
           label="On-time delivery"
