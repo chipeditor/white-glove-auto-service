@@ -628,20 +628,29 @@ final class SupabaseService: DataProvider {
 
     // MARK: - Staff
 
+    /// Roles that can be assigned work. Excludes `customer`, who holds a
+    /// membership but must never appear in a technician picker.
+    private static let staffRoles = [
+        "super_admin", "shop_admin", "service_advisor", "technician", "delivery_specialist",
+    ]
+
     func fetchStaff(organizationId: UUID) async throws -> [User] {
         let data = try await client
             .from("memberships")
-            .select("user_id, users(id, email, full_name, avatar_url, role, created_at)")
+            .select("user_id, users(*)")
             .eq("organization_id", value: organizationId.uuidString)
             .eq("is_active", value: "true")
+            .in("role", values: Self.staffRoles)
             .execute()
             .value as Data
 
+        // Optional: a row the caller cannot read comes back as null rather
+        // than being omitted, and one null must not fail the whole decode.
         struct MembershipWithUser: Decodable {
-            let users: User
+            let users: User?
         }
         let memberships = try JSONDecoder.supabase.decode([MembershipWithUser].self, from: data)
-        return memberships.map(\.users)
+        return memberships.compactMap(\.users)
     }
 }
 

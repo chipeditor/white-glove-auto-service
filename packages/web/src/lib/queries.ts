@@ -224,6 +224,16 @@ export async function fetchServiceRequest(id: string): Promise<ServiceRequestWit
   } as ServiceRequestWithDetails;
 }
 
+/// Roles that can be assigned work. Excludes `customer`, who holds a
+/// membership but must never appear in a technician picker.
+const STAFF_ROLES = [
+  'super_admin',
+  'shop_admin',
+  'service_advisor',
+  'technician',
+  'delivery_specialist',
+];
+
 export async function fetchOrgUsers(): Promise<User[]> {
   const supabase = await createServerSupabaseClient();
   const orgId = await getOrgId();
@@ -233,9 +243,12 @@ export async function fetchOrgUsers(): Promise<User[]> {
     .from('memberships')
     .select('user_id, users(*)')
     .eq('organization_id', orgId)
-    .eq('is_active', true);
+    .eq('is_active', true)
+    .in('role', STAFF_ROLES);
 
-  return (memberships ?? []).map((m: Record<string, unknown>) => m.users).filter(Boolean) as User[];
+  return (memberships ?? [])
+    .map((m: Record<string, unknown>) => m.users)
+    .filter(Boolean) as User[];
 }
 
 export interface InspectionWithDetails extends Inspection {
