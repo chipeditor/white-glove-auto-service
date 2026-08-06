@@ -16,10 +16,11 @@ export default async function ServiceRequestsPage() {
           title="Service Requests"
           subtitle={`${serviceRequests.length} total requests`}
           actions={
-            <Link href="/service-requests/new">
+            // A service request needs a vehicle, so intake is the creation path.
+            <Link href="/intake/new">
               <Button>
                 <Plus size={16} />
-                New Request
+                New Intake
               </Button>
             </Link>
           }

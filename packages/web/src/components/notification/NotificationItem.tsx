@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { clsx } from 'clsx';
+import { Check } from 'lucide-react';
 import type { Notification } from '@/shared/types';
 
 function timeAgo(dateStr: string): string {
@@ -27,15 +28,14 @@ const TYPE_COLORS: Record<string, string> = {
 
 interface NotificationItemProps {
   notification: Notification;
+  /** Omitted when already read, which also hides the control. */
+  onMarkRead?: () => void;
 }
 
-export function NotificationItem({ notification }: NotificationItemProps) {
+export function NotificationItem({ notification, onMarkRead }: NotificationItemProps) {
   const content = (
     <div
-      className={clsx(
-        'flex gap-3 px-4 py-3 transition-colors',
-        !notification.read ? 'bg-wg-blue/5' : 'hover:bg-wg-card-hover'
-      )}
+      className="flex gap-3 px-4 py-3 transition-colors hover:bg-wg-card-hover"
     >
       <div className="mt-1.5">
         <div className={clsx('w-2.5 h-2.5 rounded-full', TYPE_COLORS[notification.type] ?? 'bg-gray-500')} />
@@ -52,8 +52,27 @@ export function NotificationItem({ notification }: NotificationItemProps) {
     </div>
   );
 
-  if (notification.action_url) {
-    return <Link href={notification.action_url}>{content}</Link>;
-  }
-  return content;
+  // The mark-read control sits beside the link rather than inside it, so the
+  // two interactive targets never nest.
+  return (
+    <div className={clsx('flex items-center', !notification.read && 'bg-wg-blue/5')}>
+      {notification.action_url ? (
+        <Link href={notification.action_url} className="flex-1 min-w-0">
+          {content}
+        </Link>
+      ) : (
+        <div className="flex-1 min-w-0">{content}</div>
+      )}
+      {onMarkRead && (
+        <button
+          onClick={onMarkRead}
+          title="Mark as read"
+          aria-label={`Mark "${notification.title}" as read`}
+          className="shrink-0 p-2 mr-2 rounded-lg text-wg-muted hover:text-wg-blue hover:bg-wg-card transition-colors"
+        >
+          <Check size={15} />
+        </button>
+      )}
+    </div>
+  );
 }

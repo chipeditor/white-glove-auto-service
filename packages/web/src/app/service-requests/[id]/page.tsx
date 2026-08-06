@@ -11,6 +11,7 @@ import { createServerSupabaseClient } from '@/lib/supabase-server';
 import type { ServiceRequestStatus } from '@/shared/types';
 import { ServiceRequestLineItems } from './line-items';
 import { TechAssignment } from './tech-assignment';
+import { StatusControl } from './status-control';
 
 const STATUS_PIPELINE: ServiceRequestStatus[] = [
   'draft',
@@ -157,6 +158,9 @@ export default async function ServiceRequestDetailPage({
                   </div>
                 );
               })}
+            </div>
+            <div className="mt-4 pt-4 border-t border-wg-border">
+              <StatusControl serviceRequestId={sr.id} currentStatus={sr.status} />
             </div>
           </div>
         )}

@@ -30,7 +30,7 @@ export default async function EstimateReportPage({ params }: { params: Promise<{
 
   const lineTotal = (l: Record<string, unknown>) => ((l.quantity as number) ?? 1) * ((l.unit_price as number) ?? 0);
   const subtotal = lines.filter((l: Record<string, unknown>) => l.status !== 'declined').reduce((sum: number, l: Record<string, unknown>) => sum + lineTotal(l), 0);
-  const taxRate = 0.0;
+  const taxRate = Number(sr.tax_rate ?? 0);
   const tax = subtotal * taxRate;
   const total = subtotal + tax;
 
