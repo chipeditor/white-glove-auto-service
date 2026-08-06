@@ -117,7 +117,7 @@ final class MockDataProvider: DataProvider {
 
     // MARK: - Inspections
 
-    let inspections: [Inspection] = [
+    var inspections: [Inspection] = [
         Inspection(id: insp1Id, vehicleId: veh1Id, inspectorId: userTechId,
                    type: .intake, status: .completed, notes: nil,
                    completedAt: ago(2700), createdAt: ago(2880)),
@@ -430,6 +430,40 @@ final class MockDataProvider: DataProvider {
         )
         serviceRequests.append(sr)
         return sr
+    }
+
+    func updateServiceRequestStatus(id: UUID, status: ServiceRequestStatus) async throws {
+        try await Task.sleep(nanoseconds: 200_000_000)
+        guard let index = serviceRequests.firstIndex(where: { $0.id == id }) else {
+            throw MockError.notFound
+        }
+        let old = serviceRequests[index]
+        serviceRequests[index] = ServiceRequest(
+            id: old.id, vehicleId: old.vehicleId, organizationId: old.organizationId,
+            title: old.title, description: old.description, status: status,
+            priority: old.priority, estimatedCompletion: old.estimatedCompletion,
+            actualCompletion: old.actualCompletion, promisedAt: old.promisedAt,
+            diagnosisCompletedAt: old.diagnosisCompletedAt, isDiscovery: old.isDiscovery,
+            parentRequestId: old.parentRequestId, subtotal: old.subtotal, phase: old.phase,
+            healthStatus: old.healthStatus, technicianId: old.technicianId, createdAt: old.createdAt
+        )
+    }
+
+    func createInspection(
+        vehicleId: UUID,
+        serviceRequestId: UUID?,
+        organizationId: UUID,
+        inspectorId: UUID?,
+        type: InspectionType
+    ) async throws -> Inspection {
+        try await Task.sleep(nanoseconds: 300_000_000)
+        let inspection = Inspection(
+            id: UUID(), vehicleId: vehicleId, inspectorId: inspectorId,
+            type: type, status: .notStarted, notes: nil,
+            completedAt: nil, createdAt: Date()
+        )
+        inspections.append(inspection)
+        return inspection
     }
 
     func fetchInspections(vehicleId: UUID) async throws -> [Inspection] {

@@ -877,3 +877,55 @@ struct ScheduleEntry: Identifiable, Sendable {
     let startDate: Date?
 }
 
+
+// MARK: - Inspection Templates
+
+/// Section/item templates used to seed a newly created inspection.
+///
+/// These mirror `INTAKE_SECTIONS` in `packages/web/src/app/api/intake/route.ts`.
+/// Keep the two in sync — an inspection created on one platform should look
+/// identical when opened on the other.
+enum InspectionTemplate {
+    struct Section {
+        let name: String
+        let items: [String]
+    }
+
+    static let intake: [Section] = [
+        Section(name: "Exterior Front", items: ["Hood", "Bumper", "Grille", "Headlights", "Windshield"]),
+        Section(name: "Exterior Rear", items: ["Trunk/Hatch", "Bumper", "Taillights", "Exhaust", "Rear Glass"]),
+        Section(name: "Driver Side", items: ["Front Fender", "Door", "Mirror", "Rear Quarter", "Rocker Panel"]),
+        Section(name: "Passenger Side", items: ["Front Fender", "Door", "Mirror", "Rear Quarter", "Rocker Panel"]),
+        Section(name: "Wheels & Tires", items: ["LF Tire/Wheel", "RF Tire/Wheel", "LR Tire/Wheel", "RR Tire/Wheel", "Spare"]),
+        Section(name: "Glass & Lights", items: ["Windshield", "Rear Window", "Side Windows", "All Lights Working", "Turn Signals"]),
+        Section(name: "Interior", items: ["Seats", "Dashboard", "Steering Wheel", "Center Console", "Carpet/Mats", "Headliner"]),
+        Section(name: "Engine Bay", items: ["Oil Level", "Coolant Level", "Brake Fluid", "Battery", "Belts & Hoses", "Air Filter"]),
+        Section(name: "Warning Lights", items: ["Check Engine", "ABS", "Airbag", "TPMS", "Oil Pressure", "Battery"]),
+        Section(name: "Final Notes", items: ["Overall Condition", "Customer Concerns", "Recommendations"]),
+    ]
+
+    static let mechanical: [Section] = [
+        Section(name: "Engine", items: ["Oil Level & Condition", "Coolant", "Belts", "Hoses", "Air Filter", "Leaks"]),
+        Section(name: "Brakes", items: ["Front Pads", "Rear Pads", "Rotors", "Brake Fluid", "Lines & Hoses", "Parking Brake"]),
+        Section(name: "Suspension & Steering", items: ["Shocks/Struts", "Control Arms", "Tie Rods", "Ball Joints", "Alignment"]),
+        Section(name: "Drivetrain", items: ["Transmission Fluid", "Differential", "Driveshaft", "CV Joints", "Clutch"]),
+        Section(name: "Electrical", items: ["Battery", "Alternator Output", "Starter", "Lighting", "Fault Codes"]),
+        Section(name: "Tires", items: ["LF Tread Depth", "RF Tread Depth", "LR Tread Depth", "RR Tread Depth", "Pressures"]),
+    ]
+
+    static let delivery: [Section] = [
+        Section(name: "Work Verification", items: ["All Approved Work Complete", "No Warning Lights", "Test Drive Complete"]),
+        Section(name: "Appearance", items: ["Exterior Washed", "Interior Cleaned", "No New Damage", "Personal Items Present"]),
+        Section(name: "Handover", items: ["Keys Returned", "Paperwork Complete", "Customer Walkthrough", "Payment Settled"]),
+    ]
+
+    /// Falls back to the intake template for inspection types without a
+    /// dedicated list, so an inspection is never created empty.
+    static func sections(for type: InspectionType) -> [Section] {
+        switch type {
+        case .mechanical: return mechanical
+        case .delivery: return delivery
+        default: return intake
+        }
+    }
+}

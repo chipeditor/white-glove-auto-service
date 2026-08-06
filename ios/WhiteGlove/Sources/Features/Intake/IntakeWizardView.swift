@@ -126,19 +126,21 @@ struct IntakeWizardView: View {
         let orgId = authService.organizationId
 
         do {
+            // An existing customer picked from search is reused as-is; anything
+            // else must actually be inserted before the vehicle can reference it.
             let customer: Customer
-            if !customerName.isEmpty {
+            if let existing = selectedCustomer {
+                customer = existing
+            } else {
                 customer = try await authService.dataProvider.createCustomer(
                     Customer(
                         id: UUID(), organizationId: orgId,
-                        fullName: customerName,
+                        fullName: customerName.isEmpty ? "Walk-in" : customerName,
                         email: customerEmail.isEmpty ? nil : customerEmail,
                         phone: customerPhone.isEmpty ? nil : customerPhone,
                         address: nil, createdAt: Date()
                     )
                 )
-            } else {
-                customer = Customer(id: UUID(), organizationId: orgId, fullName: "Walk-in", email: nil, phone: nil, address: nil, createdAt: Date())
             }
 
             let vehicle = try await authService.dataProvider.createVehicle(
@@ -154,11 +156,19 @@ struct IntakeWizardView: View {
             )
 
             let title = "\(selectedInspectionType.rawValue.capitalized) — \(vehicle.displayName)"
-            _ = try await authService.dataProvider.createServiceRequest(
+            let serviceRequest = try await authService.dataProvider.createServiceRequest(
                 vehicleId: vehicle.id,
                 organizationId: orgId,
                 title: title,
                 description: serviceDescription.isEmpty ? nil : serviceDescription
+            )
+
+            _ = try await authService.dataProvider.createInspection(
+                vehicleId: vehicle.id,
+                serviceRequestId: serviceRequest.id,
+                organizationId: orgId,
+                inspectorId: authService.currentUser?.id,
+                type: selectedInspectionType
             )
 
             showSuccess = true

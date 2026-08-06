@@ -8,6 +8,8 @@ struct ServiceRequestDetailView: View {
     @State private var staff: [User] = []
     @State private var isLoading = true
     @State private var showStatusPicker = false
+    @State private var isUpdatingStatus = false
+    @State private var statusError: String?
 
     var technicianName: String? {
         guard let techId = sr?.technicianId else { return nil }
@@ -47,6 +49,14 @@ struct ServiceRequestDetailView: View {
         )
         .navigationBarTitleDisplayMode(.inline)
         .task { await loadData() }
+        .alert("Could Not Update Status", isPresented: .init(
+            get: { statusError != nil },
+            set: { if !$0 { statusError = nil } }
+        )) {
+            Button("OK") { statusError = nil }
+        } message: {
+            Text(statusError ?? "")
+        }
     }
 
     private func loadData() async {
@@ -118,13 +128,26 @@ struct ServiceRequestDetailView: View {
             } label: {
                 StatusAdvanceButton(label: "Move to \(primary.displayName)")
             }
+            .disabled(isUpdatingStatus)
             .confirmationDialog("Update Status", isPresented: $showStatusPicker) {
                 ForEach(nextOptions, id: \.self) { status in
                     Button(status.displayName) {
-                        // Status update would go through API
+                        Task { await advance(to: status) }
                     }
                 }
+                Button("Cancel", role: .cancel) {}
             }
+        }
+    }
+
+    private func advance(to status: ServiceRequestStatus) async {
+        isUpdatingStatus = true
+        defer { isUpdatingStatus = false }
+        do {
+            try await authService.dataProvider.updateServiceRequestStatus(id: serviceRequestId, status: status)
+            await loadData()
+        } catch {
+            statusError = error.localizedDescription
         }
     }
 

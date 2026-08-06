@@ -26,8 +26,10 @@ protocol DataProvider {
     func fetchServiceRequests(organizationId: UUID) async throws -> [ServiceRequest]
     func fetchServiceRequest(id: UUID) async throws -> ServiceRequest
     func createServiceRequest(vehicleId: UUID, organizationId: UUID, title: String, description: String?) async throws -> ServiceRequest
+    func updateServiceRequestStatus(id: UUID, status: ServiceRequestStatus) async throws
 
     // Inspections
+    func createInspection(vehicleId: UUID, serviceRequestId: UUID?, organizationId: UUID, inspectorId: UUID?, type: InspectionType) async throws -> Inspection
     func fetchInspections(vehicleId: UUID) async throws -> [Inspection]
     func fetchInspection(id: UUID) async throws -> Inspection
     func fetchInspectionSections(inspectionId: UUID) async throws -> [InspectionSection]

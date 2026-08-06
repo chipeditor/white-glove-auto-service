@@ -9,6 +9,7 @@ struct EstimateBuilderView: View {
     @State private var isLoading = true
     @State private var showAddSheet = false
     @State private var showCannedJobPicker = false
+    @State private var pendingDeletion: RepairOrderLine?
 
     var subtotal: Double {
         lineItems.reduce(0) { $0 + $1.total }
@@ -76,6 +77,21 @@ struct EstimateBuilderView: View {
             }
         }
         .task { await loadData() }
+        .confirmationDialog(
+            "Remove this line item?",
+            isPresented: .init(
+                get: { pendingDeletion != nil },
+                set: { if !$0 { pendingDeletion = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            if let item = pendingDeletion {
+                Button("Delete \(item.description)", role: .destructive) {
+                    Task { await deleteItem(item) }
+                }
+            }
+            Button("Cancel", role: .cancel) { pendingDeletion = nil }
+        }
         .refreshable { await loadData() }
     }
 
@@ -139,15 +155,22 @@ struct EstimateBuilderView: View {
             Text("$\(item.total, specifier: "%.2f")")
                 .font(.subheadline.weight(.semibold).monospacedDigit())
                 .foregroundColor(.white.opacity(0.9))
+
+            // A visible control rather than .swipeActions, which only fires
+            // inside a List and this card is laid out in a ScrollView.
+            Button {
+                pendingDeletion = item
+            } label: {
+                Image(systemName: "trash")
+                    .font(.footnote)
+                    .foregroundColor(Color(hex: Theme.alert).opacity(0.8))
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Delete \(item.description)")
         }
         .glassCard(padding: 12)
-        .swipeActions(edge: .trailing) {
-            Button(role: .destructive) {
-                Task { await deleteItem(item) }
-            } label: {
-                Label("Delete", systemImage: "trash")
-            }
-        }
     }
 
     func lineItemIcon(_ type: LineItemType) -> String {

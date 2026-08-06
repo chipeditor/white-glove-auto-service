@@ -189,7 +189,78 @@ final class SupabaseService: DataProvider {
         return try JSONDecoder.supabase.decode(ServiceRequest.self, from: data)
     }
 
+    func updateServiceRequestStatus(id: UUID, status: ServiceRequestStatus) async throws {
+        try await client
+            .from("service_requests")
+            .update([
+                "status": status.rawValue,
+                "updated_at": ISO8601DateFormatter().string(from: Date()),
+            ])
+            .eq("id", value: id.uuidString)
+            .execute()
+    }
+
     // MARK: - Inspections
+
+    func createInspection(
+        vehicleId: UUID,
+        serviceRequestId: UUID?,
+        organizationId: UUID,
+        inspectorId: UUID?,
+        type: InspectionType
+    ) async throws -> Inspection {
+        var payload: [String: String] = [
+            "organization_id": organizationId.uuidString,
+            "vehicle_id": vehicleId.uuidString,
+            "type": type.rawValue,
+            "status": InspectionStatus.notStarted.rawValue,
+        ]
+        payload["service_request_id"] = serviceRequestId?.uuidString
+        payload["inspector_id"] = inspectorId?.uuidString
+
+        let data = try await client
+            .from("inspections")
+            .insert(payload)
+            .select()
+            .single()
+            .execute()
+            .value as Data
+        let inspection = try JSONDecoder.supabase.decode(Inspection.self, from: data)
+
+        try await seedSections(for: inspection.id, template: InspectionTemplate.sections(for: type))
+        return inspection
+    }
+
+    /// Creates the section rows and their items for a freshly created inspection.
+    /// Without these the inspection opens as an empty shell.
+    private func seedSections(for inspectionId: UUID, template: [InspectionTemplate.Section]) async throws {
+        for (index, section) in template.enumerated() {
+            let sectionData = try await client
+                .from("inspection_sections")
+                .insert([
+                    "inspection_id": inspectionId.uuidString,
+                    "name": section.name,
+                    "sort_order": String(index),
+                    "status": InspectionStatus.notStarted.rawValue,
+                ])
+                .select("id")
+                .single()
+                .execute()
+                .value as Data
+
+            struct SectionRow: Decodable { let id: UUID }
+            let row = try JSONDecoder.supabase.decode(SectionRow.self, from: sectionData)
+
+            let items = section.items.enumerated().map { itemIndex, label in
+                [
+                    "section_id": row.id.uuidString,
+                    "label": label,
+                    "sort_order": String(itemIndex),
+                ]
+            }
+            try await client.from("inspection_items").insert(items).execute()
+        }
+    }
 
     func fetchInspections(vehicleId: UUID) async throws -> [Inspection] {
         let data = try await client
