@@ -606,9 +606,19 @@ final class MockDataProvider: DataProvider {
 
     // MARK: - Line Items
 
+    /// Seeded lazily per service request so status toggles survive a refetch.
+    private var lineItemStore: [UUID: [RepairOrderLine]] = [:]
+
     func fetchLineItems(serviceRequestId: UUID) async throws -> [RepairOrderLine] {
         try await Task.sleep(nanoseconds: 200_000_000)
-        return [
+        if let existing = lineItemStore[serviceRequestId] { return existing }
+        let seeded = Self.seedLines(for: serviceRequestId)
+        lineItemStore[serviceRequestId] = seeded
+        return seeded
+    }
+
+    private static func seedLines(for serviceRequestId: UUID) -> [RepairOrderLine] {
+        [
             RepairOrderLine(id: UUID(), serviceRequestId: serviceRequestId, organizationId: Self.orgId,
                             lineType: .labor, description: "Engine oil and filter change", quantity: 1, unitPrice: 89.99,
                             discountAmount: 0, total: 89.99, status: .completed, phase: .complete,
@@ -638,6 +648,30 @@ final class MockDataProvider: DataProvider {
 
     func deleteLineItem(id: UUID) async throws {
         try await Task.sleep(nanoseconds: 200_000_000)
+        for (srId, lines) in lineItemStore {
+            lineItemStore[srId] = lines.filter { $0.id != id }
+        }
+    }
+
+    func updateLineItemStatus(id: UUID, status: LineItemStatus) async throws {
+        try await Task.sleep(nanoseconds: 150_000_000)
+        for (srId, lines) in lineItemStore {
+            lineItemStore[srId] = lines.map { line in
+                guard line.id == id else { return line }
+                return RepairOrderLine(
+                    id: line.id, serviceRequestId: line.serviceRequestId,
+                    organizationId: line.organizationId, lineType: line.lineType,
+                    description: line.description, quantity: line.quantity,
+                    unitPrice: line.unitPrice, discountAmount: line.discountAmount,
+                    total: line.total, status: status,
+                    phase: status == .completed ? .complete : (status == .inProgress ? .active : line.phase),
+                    partsStatus: line.partsStatus, partsTier: line.partsTier,
+                    partsEta: line.partsEta, technicianId: line.technicianId,
+                    cannedJobId: line.cannedJobId, sortOrder: line.sortOrder,
+                    createdAt: line.createdAt
+                )
+            }
+        }
     }
 
     // MARK: - Canned Jobs

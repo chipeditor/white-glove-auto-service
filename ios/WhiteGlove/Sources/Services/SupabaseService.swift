@@ -516,6 +516,23 @@ final class SupabaseService: DataProvider {
             .execute()
     }
 
+    func updateLineItemStatus(id: UUID, status: LineItemStatus) async throws {
+        // Keep `phase` consistent with the line's status so the health board,
+        // which reads phase, does not disagree with what the tech sees.
+        var update = ["status": status.rawValue]
+        switch status {
+        case .inProgress: update["phase"] = WorkPhase.active.rawValue
+        case .completed: update["phase"] = WorkPhase.complete.rawValue
+        default: break
+        }
+
+        try await client
+            .from("repair_order_lines")
+            .update(update)
+            .eq("id", value: id.uuidString)
+            .execute()
+    }
+
     // MARK: - Canned Jobs
 
     func fetchCannedJobs(organizationId: UUID) async throws -> [CannedJob] {

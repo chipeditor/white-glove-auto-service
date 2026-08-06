@@ -60,6 +60,7 @@ protocol DataProvider {
     func fetchLineItems(serviceRequestId: UUID) async throws -> [RepairOrderLine]
     func createLineItem(serviceRequestId: UUID, organizationId: UUID, lineType: LineItemType, description: String, quantity: Double, unitPrice: Double) async throws -> RepairOrderLine
     func deleteLineItem(id: UUID) async throws
+    func updateLineItemStatus(id: UUID, status: LineItemStatus) async throws
 
     // Canned Jobs
     func fetchCannedJobs(organizationId: UUID) async throws -> [CannedJob]

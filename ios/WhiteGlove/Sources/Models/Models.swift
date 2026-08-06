@@ -219,6 +219,17 @@ enum PartsStatus: String, Codable, Sendable {
     case inTransit = "in_transit"
     case received = "received"
     case installed = "installed"
+
+    var displayName: String {
+        switch self {
+        case .notNeeded: return "No Parts"
+        case .toOrder: return "To Order"
+        case .ordered: return "Ordered"
+        case .inTransit: return "In Transit"
+        case .received: return "Received"
+        case .installed: return "Installed"
+        }
+    }
 }
 
 enum PartsTier: String, Codable, Sendable {

@@ -158,13 +158,23 @@ struct ServiceRequestDetailView: View {
         if let vehicle {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                 NavigationLink {
+                    RepairOrderView(serviceRequest: sr)
+                } label: {
+                    TechActionButton(
+                        icon: "wrench.and.screwdriver.fill",
+                        label: "Repair Order",
+                        iconColor: Theme.goldColor,
+                        isProminent: true
+                    )
+                }
+
+                NavigationLink {
                     EstimateBuilderView(serviceRequest: sr)
                 } label: {
                     TechActionButton(
                         icon: "doc.text.fill",
                         label: "Estimate",
-                        iconColor: Theme.goldColor,
-                        isProminent: true
+                        iconColor: Theme.blueColor
                     )
                 }
 
