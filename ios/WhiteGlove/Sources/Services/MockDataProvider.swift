@@ -44,17 +44,17 @@ final class MockDataProvider: DataProvider {
 
     let users: [User] = [
         User(id: userAdminId, email: "john@whiteglove.com", fullName: "John Smith",
-             avatarUrl: nil, role: .shopAdmin, createdAt: ago(50400)),
+             phone: nil, avatarUrl: nil, defaultRole: .shopAdmin, createdAt: ago(50400), updatedAt: nil),
         User(id: userAdvisorId, email: "lisa@whiteglove.com", fullName: "Lisa Chen",
-             avatarUrl: nil, role: .serviceAdvisor, createdAt: ago(50400)),
+             phone: nil, avatarUrl: nil, defaultRole: .serviceAdvisor, createdAt: ago(50400), updatedAt: nil),
         User(id: userTechId, email: "james@whiteglove.com", fullName: "James Taylor",
-             avatarUrl: nil, role: .technician, createdAt: ago(40320)),
+             phone: nil, avatarUrl: nil, defaultRole: .technician, createdAt: ago(40320), updatedAt: nil),
         User(id: userTech2Id, email: "maria@whiteglove.com", fullName: "Maria Garcia",
-             avatarUrl: nil, role: .technician, createdAt: ago(40320)),
+             phone: nil, avatarUrl: nil, defaultRole: .technician, createdAt: ago(40320), updatedAt: nil),
         User(id: userMechId, email: "robert@whiteglove.com", fullName: "Robert Kim",
-             avatarUrl: nil, role: .technician, createdAt: ago(30240)),
+             phone: nil, avatarUrl: nil, defaultRole: .technician, createdAt: ago(30240), updatedAt: nil),
         User(id: userCustId, email: "mike.johnson@email.com", fullName: "Mike Johnson",
-             avatarUrl: nil, role: .customer, createdAt: ago(10080)),
+             phone: nil, avatarUrl: nil, defaultRole: .customer, createdAt: ago(10080), updatedAt: nil),
     ]
 
     // MARK: - Customers

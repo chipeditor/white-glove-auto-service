@@ -309,15 +309,21 @@ struct User: Codable, Identifiable, Sendable {
     let id: UUID
     let email: String
     let fullName: String
+    let phone: String?
     let avatarUrl: String?
-    let role: UserRole
+    let defaultRole: UserRole
     let createdAt: Date
+    let updatedAt: Date?
+
+    var role: UserRole { defaultRole }
 
     enum CodingKeys: String, CodingKey {
-        case id, email, role
+        case id, email, phone
         case fullName = "full_name"
         case avatarUrl = "avatar_url"
+        case defaultRole = "default_role"
         case createdAt = "created_at"
+        case updatedAt = "updated_at"
     }
 }
 
