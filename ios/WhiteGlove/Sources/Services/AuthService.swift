@@ -114,7 +114,7 @@ final class AuthService: ObservableObject {
                 .limit(1)
                 .single()
                 .execute()
-                .value as Data
+                .data
 
             struct MembershipRow: Decodable {
                 let organizationId: UUID
