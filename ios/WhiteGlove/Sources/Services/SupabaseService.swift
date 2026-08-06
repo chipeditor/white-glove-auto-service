@@ -26,7 +26,7 @@ final class SupabaseService: DataProvider {
             .eq("id", value: response.user.id.uuidString)
             .single()
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode(User.self, from: data)
     }
 
@@ -42,7 +42,7 @@ final class SupabaseService: DataProvider {
             .eq("id", value: session.user.id.uuidString)
             .single()
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode(User.self, from: data)
     }
 
@@ -55,7 +55,7 @@ final class SupabaseService: DataProvider {
             .eq("organization_id", value: organizationId.uuidString)
             .order("updated_at", ascending: false)
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode([Vehicle].self, from: data)
     }
 
@@ -66,7 +66,7 @@ final class SupabaseService: DataProvider {
             .eq("id", value: id.uuidString)
             .single()
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode(Vehicle.self, from: data)
     }
 
@@ -78,7 +78,7 @@ final class SupabaseService: DataProvider {
             .eq("email", value: email)
             .limit(1)
             .execute()
-            .value as Data
+            .data
         let customers = try JSONDecoder.supabase.decode([Customer].self, from: custData)
         guard let customer = customers.first else { return [] }
         let data = try await client
@@ -87,7 +87,7 @@ final class SupabaseService: DataProvider {
             .eq("customer_id", value: customer.id.uuidString)
             .order("updated_at", ascending: false)
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode([Vehicle].self, from: data)
     }
 
@@ -98,7 +98,7 @@ final class SupabaseService: DataProvider {
             .select()
             .single()
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode(Vehicle.self, from: data)
     }
 
@@ -119,7 +119,7 @@ final class SupabaseService: DataProvider {
             .eq("organization_id", value: organizationId.uuidString)
             .order("full_name")
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode([Customer].self, from: data)
     }
 
@@ -130,7 +130,7 @@ final class SupabaseService: DataProvider {
             .eq("id", value: id.uuidString)
             .single()
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode(Customer.self, from: data)
     }
 
@@ -141,7 +141,7 @@ final class SupabaseService: DataProvider {
             .select()
             .single()
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode(Customer.self, from: data)
     }
 
@@ -154,7 +154,7 @@ final class SupabaseService: DataProvider {
             .eq("organization_id", value: organizationId.uuidString)
             .order("created_at", ascending: false)
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode([ServiceRequest].self, from: data)
     }
 
@@ -165,7 +165,7 @@ final class SupabaseService: DataProvider {
             .eq("id", value: id.uuidString)
             .single()
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode(ServiceRequest.self, from: data)
     }
 
@@ -185,7 +185,7 @@ final class SupabaseService: DataProvider {
             .select()
             .single()
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode(ServiceRequest.self, from: data)
     }
 
@@ -224,7 +224,7 @@ final class SupabaseService: DataProvider {
             .select()
             .single()
             .execute()
-            .value as Data
+            .data
         let inspection = try JSONDecoder.supabase.decode(Inspection.self, from: data)
 
         try await seedSections(for: inspection.id, template: InspectionTemplate.sections(for: type))
@@ -246,7 +246,7 @@ final class SupabaseService: DataProvider {
                 .select("id")
                 .single()
                 .execute()
-                .value as Data
+                .data
 
             struct SectionRow: Decodable { let id: UUID }
             let row = try JSONDecoder.supabase.decode(SectionRow.self, from: sectionData)
@@ -269,7 +269,7 @@ final class SupabaseService: DataProvider {
             .eq("vehicle_id", value: vehicleId.uuidString)
             .order("created_at", ascending: false)
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode([Inspection].self, from: data)
     }
 
@@ -280,7 +280,7 @@ final class SupabaseService: DataProvider {
             .eq("id", value: id.uuidString)
             .single()
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode(Inspection.self, from: data)
     }
 
@@ -291,7 +291,7 @@ final class SupabaseService: DataProvider {
             .eq("inspection_id", value: inspectionId.uuidString)
             .order("sort_order")
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode([InspectionSection].self, from: data)
     }
 
@@ -362,7 +362,7 @@ final class SupabaseService: DataProvider {
             .select()
             .single()
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode(MediaAsset.self, from: data)
     }
 
@@ -373,7 +373,7 @@ final class SupabaseService: DataProvider {
             .eq("vehicle_id", value: vehicleId.uuidString)
             .order("created_at", ascending: false)
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode([MediaAsset].self, from: data)
     }
 
@@ -385,7 +385,7 @@ final class SupabaseService: DataProvider {
             .select("*, items:checklist_items(*)")
             .eq("vehicle_id", value: vehicleId.uuidString)
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode([Checklist].self, from: data)
     }
 
@@ -414,7 +414,7 @@ final class SupabaseService: DataProvider {
             .order("scheduled_date", ascending: true)
             .order("scheduled_time", ascending: true)
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode([Appointment].self, from: data)
     }
 
@@ -437,7 +437,7 @@ final class SupabaseService: DataProvider {
             .order("created_at", ascending: false)
             .limit(50)
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode([AuditEvent].self, from: data)
     }
 
@@ -451,7 +451,7 @@ final class SupabaseService: DataProvider {
             .order("created_at", ascending: false)
             .limit(50)
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode([Notification].self, from: data)
     }
 
@@ -481,7 +481,7 @@ final class SupabaseService: DataProvider {
             .eq("service_request_id", value: serviceRequestId.uuidString)
             .order("sort_order")
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode([RepairOrderLine].self, from: data)
     }
 
@@ -504,7 +504,7 @@ final class SupabaseService: DataProvider {
             .select()
             .single()
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode(RepairOrderLine.self, from: data)
     }
 
@@ -526,7 +526,7 @@ final class SupabaseService: DataProvider {
             .eq("is_active", value: "true")
             .order("sort_order")
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode([CannedJob].self, from: data)
     }
 
@@ -550,7 +550,7 @@ final class SupabaseService: DataProvider {
             .select()
             .single()
             .execute()
-            .value as Data
+            .data
         return try JSONDecoder.supabase.decode(CannedJob.self, from: data)
     }
 
@@ -572,7 +572,7 @@ final class SupabaseService: DataProvider {
             .not("status", operator: .in, value: "(completed,declined)")
             .order("created_at", ascending: false)
             .execute()
-            .value as Data
+            .data
 
         struct RawSR: Decodable {
             let id: UUID
@@ -642,7 +642,7 @@ final class SupabaseService: DataProvider {
             .eq("is_active", value: "true")
             .in("role", values: Self.staffRoles)
             .execute()
-            .value as Data
+            .data
 
         // Optional: a row the caller cannot read comes back as null rather
         // than being omitted, and one null must not fail the whole decode.
