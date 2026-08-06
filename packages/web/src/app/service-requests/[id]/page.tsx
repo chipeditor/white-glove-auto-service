@@ -6,10 +6,11 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { ActivityTimeline } from '@/components/ui/ActivityTimeline';
 import { FileUpload } from '@/components/ui/FileUpload';
-import { fetchServiceRequest } from '@/lib/queries';
+import { fetchServiceRequest, fetchOrgUsers } from '@/lib/queries';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import type { ServiceRequestStatus } from '@/shared/types';
 import { ServiceRequestLineItems } from './line-items';
+import { TechAssignment } from './tech-assignment';
 
 const STATUS_PIPELINE: ServiceRequestStatus[] = [
   'draft',
@@ -84,6 +85,8 @@ export default async function ServiceRequestDetailPage({
     .limit(1)
     .single();
   const orgId = membership?.organization_id || sr.organization_id;
+
+  const orgUsers = await fetchOrgUsers();
 
   const actorIds = [...new Set((events ?? []).map(e => e.actor_id).filter(Boolean))] as string[];
   let actorMap: Record<string, string> = {};
@@ -254,12 +257,11 @@ export default async function ServiceRequestDetailPage({
                   <span className="text-sm text-wg-text">{sr.advisor.full_name}</span>
                 </div>
               )}
-              {sr.technician && (
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-wg-muted">Technician</span>
-                  <span className="text-sm text-wg-text">{sr.technician.full_name}</span>
-                </div>
-              )}
+              <TechAssignment
+                serviceRequestId={sr.id}
+                currentTechnicianId={sr.technician_id}
+                technicians={orgUsers}
+              />
               <div className="flex items-center justify-between">
                 <span className="text-xs text-wg-muted">Priority</span>
                 <span className="text-sm text-wg-text">

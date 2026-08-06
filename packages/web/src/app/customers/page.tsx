@@ -1,19 +1,32 @@
+import Link from 'next/link';
+import { Plus } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { Users } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { fetchCustomers } from '@/lib/queries';
+import { CustomerTable } from './customer-table';
 
-export default function CustomersPage() {
+export default async function CustomersPage() {
+  const customers = await fetchCustomers();
+
   return (
     <AppShell>
       <div className="p-8">
-        <PageHeader title="Customers" subtitle="Customer directory" />
-        <div className="mt-8">
-          <EmptyState
-            icon={Users}
-            title="Coming Soon"
-            description="This feature is under development."
-          />
+        <PageHeader
+          title="Customers"
+          subtitle={`${customers.length} total customers`}
+          actions={
+            <Link href="/customers/new">
+              <Button>
+                <Plus size={16} />
+                Add Customer
+              </Button>
+            </Link>
+          }
+        />
+
+        <div className="mt-6">
+          <CustomerTable customers={customers} />
         </div>
       </div>
     </AppShell>

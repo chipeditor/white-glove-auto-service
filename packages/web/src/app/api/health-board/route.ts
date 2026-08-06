@@ -1,11 +1,31 @@
 import { createClient } from '@supabase/supabase-js';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { fetchHealthBoardData } from '@/lib/health-board';
 
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+const FALLBACK_ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+
+async function resolveOrgId(): Promise<string> {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return FALLBACK_ORG_ID;
+    const { data: membership } = await supabase
+      .from('memberships')
+      .select('organization_id')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .limit(1)
+      .single();
+    return membership?.organization_id ?? FALLBACK_ORG_ID;
+  } catch {
+    return FALLBACK_ORG_ID;
+  }
+}
 
 export async function GET() {
   try {
-    const data = await fetchHealthBoardData(ORG_ID);
+    const orgId = await resolveOrgId();
+    const data = await fetchHealthBoardData(orgId);
     return Response.json(data);
   } catch (e) {
     console.error('Health board error:', e);
@@ -87,7 +107,7 @@ export async function POST(request: Request) {
       .from('tech_capacity')
       .upsert({
         user_id,
-        organization_id: ORG_ID,
+        organization_id: FALLBACK_ORG_ID,
         is_available_today,
         out_reason: out_reason || null,
       }, { onConflict: 'user_id,organization_id' });

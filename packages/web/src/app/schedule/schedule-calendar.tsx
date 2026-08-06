@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Filter, Plus } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, string> = {
   draft: 'border-l-gray-500',
@@ -119,6 +119,13 @@ export function ScheduleCalendar({ serviceRequests, technicians }: Props) {
           <p className="mt-1 text-sm text-wg-text2">Service requests by estimated completion</p>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href="/intake/new"
+            className="flex items-center gap-1.5 px-3 py-2 bg-wg-blue text-white text-sm font-medium rounded-lg hover:bg-wg-blue/80 transition-colors"
+          >
+            <Plus size={16} />
+            New Intake
+          </Link>
           <select
             value={selectedTech ?? ''}
             onChange={(e) => setSelectedTech(e.target.value || null)}

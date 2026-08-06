@@ -1,19 +1,21 @@
 import { AppShell } from '@/components/layout/AppShell';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { Search } from 'lucide-react';
+import { fetchAllInspections } from '@/lib/queries';
+import { InspectionsTable } from './inspections-table';
 
-export default function InspectionsPage() {
+export default async function InspectionsPage() {
+  const inspections = await fetchAllInspections();
+
   return (
     <AppShell>
       <div className="p-8">
-        <PageHeader title="Inspections" subtitle="Vehicle inspection records" />
-        <div className="mt-8">
-          <EmptyState
-            icon={Search}
-            title="Coming Soon"
-            description="This feature is under development."
-          />
+        <PageHeader
+          title="Inspections"
+          subtitle={`${inspections.length} total inspections`}
+        />
+
+        <div className="mt-6">
+          <InspectionsTable inspections={inspections} />
         </div>
       </div>
     </AppShell>

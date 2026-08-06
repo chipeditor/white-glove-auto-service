@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import { ProgressStepper } from '@/components/ui/ProgressStepper';
@@ -36,9 +36,40 @@ export default function NewIntakePage() {
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [existingCustomers, setExistingCustomers] = useState<{ id: string; full_name: string; email: string | null; phone: string | null }[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
 
   const [serviceType, setServiceType] = useState('Performance Inspection');
   const [description, setDescription] = useState('');
+
+  useEffect(() => {
+    if (step === 1 && existingCustomers.length === 0) {
+      setLoadingCustomers(true);
+      fetch('/api/customers')
+        .then((r) => r.ok ? r.json() : [])
+        .then((data) => setExistingCustomers(data))
+        .catch(() => {})
+        .finally(() => setLoadingCustomers(false));
+    }
+  }, [step, existingCustomers.length]);
+
+  const customerMatches = useMemo(() => {
+    if (!customerSearch.trim()) return [];
+    const q = customerSearch.toLowerCase();
+    return existingCustomers.filter(
+      (c) => c.full_name.toLowerCase().includes(q) || (c.phone?.includes(q) ?? false) || (c.email?.toLowerCase().includes(q) ?? false)
+    ).slice(0, 5);
+  }, [customerSearch, existingCustomers]);
+
+  function selectCustomer(c: { id: string; full_name: string; email: string | null; phone: string | null }) {
+    setSelectedCustomerId(c.id);
+    setCustomerName(c.full_name);
+    setCustomerEmail(c.email ?? '');
+    setCustomerPhone(c.phone ?? '');
+    setCustomerSearch('');
+  }
 
   const [scanning, setScanning] = useState(false);
   const [decoding, setDecoding] = useState(false);
@@ -180,6 +211,7 @@ export default function NewIntakePage() {
         body: JSON.stringify({
           vin, year, make, model, trim, color, mileage, plate, plateState,
           customerName, customerEmail, customerPhone,
+          customerId: selectedCustomerId,
           serviceType, description,
           inspectionType: 'intake',
         }),
@@ -317,9 +349,59 @@ export default function NewIntakePage() {
         {step === 1 && (
           <div className="bg-wg-card rounded-xl border border-wg-border p-6 space-y-4">
             <h2 className="text-base font-medium text-wg-text">Customer Information</h2>
+
+            <div>
+              <label className="text-xs font-medium text-wg-text2 mb-1.5 block">Find Existing Customer</label>
+              <input
+                value={customerSearch}
+                onChange={(e) => { setCustomerSearch(e.target.value); setSelectedCustomerId(null); }}
+                placeholder="Search by name, phone, or email..."
+                className={INPUT}
+              />
+              {loadingCustomers && <p className="text-xs text-wg-muted mt-1">Loading customers...</p>}
+              {customerMatches.length > 0 && (
+                <div className="mt-2 bg-wg-bg2 rounded-lg border border-wg-border divide-y divide-wg-border/50">
+                  {customerMatches.map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => selectCustomer(c)}
+                      className="w-full text-left px-3 py-2.5 hover:bg-wg-card transition-colors first:rounded-t-lg last:rounded-b-lg"
+                    >
+                      <span className="text-sm text-wg-text">{c.full_name}</span>
+                      {c.phone && <span className="text-xs text-wg-muted ml-2">{c.phone}</span>}
+                      {c.email && <span className="text-xs text-wg-muted ml-2">{c.email}</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {selectedCustomerId && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-wg-blue/10 border border-wg-blue/20 rounded-lg">
+                <span className="text-sm text-wg-blue font-medium">Selected: {customerName}</span>
+                <button
+                  onClick={() => {
+                    setSelectedCustomerId(null);
+                    setCustomerName('');
+                    setCustomerEmail('');
+                    setCustomerPhone('');
+                  }}
+                  className="ml-auto text-xs text-wg-muted hover:text-wg-text"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-px bg-wg-border" />
+              <span className="text-xs text-wg-muted">or enter new customer</span>
+              <div className="flex-1 h-px bg-wg-border" />
+            </div>
+
             <div>
               <label className="text-xs font-medium text-wg-text2 mb-1.5 block">Full Name</label>
-              <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Customer name" className={INPUT} />
+              <input value={customerName} onChange={(e) => { setCustomerName(e.target.value); setSelectedCustomerId(null); }} placeholder="Customer name" className={INPUT} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

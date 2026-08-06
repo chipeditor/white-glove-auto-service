@@ -76,10 +76,11 @@ export function ServiceRequestTable({ serviceRequests }: Props) {
       </div>
 
       <div className="bg-wg-card rounded-xl border border-wg-border overflow-hidden">
-        <div className="grid grid-cols-[1fr_1fr_auto_auto_auto_auto] gap-4 px-4 py-3 border-b border-wg-border">
+        <div className="grid grid-cols-[1fr_1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-3 border-b border-wg-border">
           <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">Request</span>
           <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">Vehicle</span>
           <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">Customer</span>
+          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">Technician</span>
           <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">Total</span>
           <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">Status</span>
           <span className="text-xs font-medium text-wg-muted uppercase tracking-wider w-16 text-right">Updated</span>
@@ -94,7 +95,7 @@ export function ServiceRequestTable({ serviceRequests }: Props) {
             <Link
               key={sr.id}
               href={`/service-requests/${sr.id}`}
-              className="grid grid-cols-[1fr_1fr_auto_auto_auto_auto] items-center gap-4 px-4 py-3 hover:bg-wg-card-hover transition-colors border-b border-wg-border last:border-b-0"
+              className="grid grid-cols-[1fr_1fr_auto_auto_auto_auto_auto] items-center gap-4 px-4 py-3 hover:bg-wg-card-hover transition-colors border-b border-wg-border last:border-b-0"
             >
               <div>
                 <span className="text-sm font-medium text-wg-text">{sr.title}</span>
@@ -112,6 +113,9 @@ export function ServiceRequestTable({ serviceRequests }: Props) {
               </div>
               <span className="text-sm text-wg-text2 min-w-[100px]">
                 {sr.customer?.full_name ?? '—'}
+              </span>
+              <span className="text-sm text-wg-text2 min-w-[100px]">
+                {sr.technician?.full_name ?? '—'}
               </span>
               <span className="text-sm text-wg-text font-medium min-w-[80px] text-right">
                 {sr.total ? formatCurrency(sr.total) : '—'}

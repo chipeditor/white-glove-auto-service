@@ -389,6 +389,12 @@ export interface ChecklistWithItems extends Checklist {
   items: ChecklistItem[];
 }
 
+export interface ChecklistWithDetails extends Checklist {
+  vehicle: { year: number | null; make: string; model: string } | null;
+  service_request: { title: string } | null;
+  assigned_user: { full_name: string } | null;
+}
+
 export type LineItemType = 'labor' | 'parts' | 'sublet' | 'fee' | 'discount';
 export type LineItemStatus = 'pending' | 'approved' | 'declined' | 'in_progress' | 'completed';
 

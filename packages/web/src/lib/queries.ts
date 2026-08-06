@@ -12,6 +12,7 @@ import type {
   InspectionItem,
   Checklist,
   ChecklistItem,
+  ChecklistWithDetails,
   Notification,
   AffiliateRecommendation,
   User,
@@ -98,6 +99,7 @@ export interface DashboardStats {
     status: string;
     date: string;
     vehicle?: string;
+    technician?: string;
   }>;
 }
 
@@ -115,7 +117,7 @@ export async function fetchDashboardStats(): Promise<DashboardStats | null> {
     supabase.from('customers').select('id', { count: 'exact', head: true }).eq('organization_id', orgId),
     supabase.from('repair_order_lines').select('quantity, unit_price, status, service_request_id').eq('organization_id', orgId),
     supabase.from('approval_requests').select('id, status, created_at').eq('organization_id', orgId).eq('status', 'pending'),
-    supabase.from('service_requests').select('id, title, status, updated_at, vehicle:vehicles(year, make, model)').eq('organization_id', orgId).order('updated_at', { ascending: false }).limit(10),
+    supabase.from('service_requests').select('id, title, status, updated_at, vehicle:vehicles(year, make, model), technician:users!service_requests_technician_id_fkey(full_name)').eq('organization_id', orgId).order('updated_at', { ascending: false }).limit(10),
   ]);
 
   const vehicles = vehiclesRes.data ?? [];
@@ -154,6 +156,7 @@ export async function fetchDashboardStats(): Promise<DashboardStats | null> {
 
   const activity = recentSrs.map((sr: Record<string, unknown>) => {
     const v = sr.vehicle as Record<string, unknown> | null;
+    const t = sr.technician as Record<string, unknown> | null;
     return {
       id: sr.id as string,
       type: 'service_request',
@@ -161,6 +164,7 @@ export async function fetchDashboardStats(): Promise<DashboardStats | null> {
       status: sr.status as string,
       date: sr.updated_at as string,
       vehicle: v ? `${v.year ?? ''} ${v.make} ${v.model}`.trim() : undefined,
+      technician: t ? (t.full_name as string) : undefined,
     };
   });
 
@@ -234,6 +238,26 @@ export async function fetchOrgUsers(): Promise<User[]> {
   return (memberships ?? []).map((m: Record<string, unknown>) => m.users).filter(Boolean) as User[];
 }
 
+export interface InspectionWithDetails extends Inspection {
+  vehicle: { year: number | null; make: string; model: string } | null;
+  service_request: { title: string } | null;
+  inspector: { full_name: string } | null;
+}
+
+export async function fetchAllInspections(): Promise<InspectionWithDetails[]> {
+  const supabase = await createServerSupabaseClient();
+  const orgId = await getOrgId();
+  if (!orgId) return [];
+
+  const { data } = await supabase
+    .from('inspections')
+    .select('*, vehicle:vehicles(year, make, model), service_request:service_requests(title), inspector:users!inspections_inspector_id_fkey(full_name)')
+    .eq('organization_id', orgId)
+    .order('created_at', { ascending: false });
+
+  return (data ?? []) as InspectionWithDetails[];
+}
+
 export async function fetchInspections(vehicleId: string): Promise<Inspection[]> {
   const supabase = await createServerSupabaseClient();
 
@@ -270,6 +294,22 @@ export async function fetchChecklists(vehicleId: string): Promise<(Checklist & {
     .order('created_at', { ascending: false });
 
   return (data ?? []) as (Checklist & { items: ChecklistItem[] })[];
+}
+
+export async function fetchAllChecklists(): Promise<ChecklistWithDetails[]> {
+  const supabase = await createServerSupabaseClient();
+  const orgId = await getOrgId();
+  if (!orgId) return [];
+
+  const { data } = await supabase
+    .from('checklists')
+    .select(
+      '*, vehicle:vehicles(year, make, model), service_request:service_requests(title), assigned_user:users!checklists_assigned_to_fkey(full_name)'
+    )
+    .eq('organization_id', orgId)
+    .order('created_at', { ascending: false });
+
+  return (data ?? []) as ChecklistWithDetails[];
 }
 
 export async function fetchNotifications(userId: string): Promise<Notification[]> {

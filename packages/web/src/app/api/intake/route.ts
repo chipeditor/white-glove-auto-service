@@ -37,9 +37,9 @@ export async function POST(request: Request) {
   const orgId = membership.organization_id;
   const body = await request.json();
 
-  // 1. Create or find customer
-  let customerId: string | null = null;
-  if (body.customerName?.trim()) {
+  // 1. Use existing customer or create new one
+  let customerId: string | null = body.customerId || null;
+  if (!customerId && body.customerName?.trim()) {
     const { data: customer, error: custErr } = await supabase
       .from('customers')
       .insert({
