@@ -59,8 +59,33 @@ final class AuthService: ObservableObject {
             isAuthenticated = true
             await resolveOrganization(userId: user.id)
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = Self.describe(error)
         }
+    }
+
+    /// DecodingError's localizedDescription collapses to an unhelpful
+    /// "data couldn't be read" string, hiding which field actually failed.
+    static func describe(_ error: Error) -> String {
+        guard let decodingError = error as? DecodingError else {
+            return error.localizedDescription
+        }
+        switch decodingError {
+        case let .keyNotFound(key, context):
+            return "Missing field '\(key.stringValue)' at \(path(context))"
+        case let .typeMismatch(type, context):
+            return "Type mismatch: expected \(type) at \(path(context))"
+        case let .valueNotFound(type, context):
+            return "Null value for non-optional \(type) at \(path(context))"
+        case let .dataCorrupted(context):
+            return "Corrupted data at \(path(context)): \(context.debugDescription)"
+        @unknown default:
+            return decodingError.localizedDescription
+        }
+    }
+
+    private static func path(_ context: DecodingError.Context) -> String {
+        let joined = context.codingPath.map(\.stringValue).joined(separator: ".")
+        return joined.isEmpty ? "root" : joined
     }
 
     func signOut() async {
