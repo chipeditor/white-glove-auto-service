@@ -11,7 +11,7 @@ export default function IntakeDetailsPage({ params }: { params: Promise<{ id: st
 
   return (
     <AppShell>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <PageHeader
           title="Intake Details"
           breadcrumbs={[

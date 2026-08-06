@@ -6,7 +6,7 @@ import { Car } from 'lucide-react';
 export default function NewVehiclePage() {
   return (
     <AppShell>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <PageHeader
           title="New Vehicle"
           breadcrumbs={[

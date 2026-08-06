@@ -136,7 +136,8 @@ export function InspectionsTable({ inspections }: Props) {
         </div>
       </div>
 
-      <div className="bg-wg-card rounded-xl border border-wg-border overflow-hidden">
+      {/* Desktop table */}
+      <div className="hidden md:block bg-wg-card rounded-xl border border-wg-border overflow-hidden">
         <div className="grid grid-cols-[auto_1fr_1fr_auto_auto] gap-4 px-4 py-3 border-b border-wg-border">
           <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">Type</span>
           <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">Vehicle</span>
@@ -178,6 +179,43 @@ export function InspectionsTable({ inspections }: Props) {
               <span className="text-xs text-wg-muted w-16 text-right">
                 {timeAgo(ins.created_at)}
               </span>
+            </Link>
+          ))
+        )}
+      </div>
+
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-2">
+        {filtered.length === 0 ? (
+          <div className="bg-wg-card rounded-xl border border-wg-border px-4 py-12 text-center text-sm text-wg-muted">
+            No inspections found.
+          </div>
+        ) : (
+          filtered.map((ins) => (
+            <Link
+              key={ins.id}
+              href={`/inspection/${ins.id}`}
+              className="block bg-wg-card rounded-xl border border-wg-border p-3.5 active:bg-wg-card-hover transition-colors"
+            >
+              <div className="flex items-start justify-between gap-2 mb-1.5">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-wg-text truncate">
+                    {ins.vehicle
+                      ? `${ins.vehicle.year ?? ''} ${ins.vehicle.make} ${ins.vehicle.model}`.trim()
+                      : 'Unknown Vehicle'}
+                  </p>
+                  <p className="text-xs text-wg-muted truncate mt-0.5">
+                    {ins.service_request?.title ?? '—'}
+                  </p>
+                </div>
+                <StatusBadge status={ins.status} />
+              </div>
+              <div className="flex items-center gap-2 text-xs text-wg-muted">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${TYPE_STYLES[ins.type]}`}>
+                  {TYPE_LABELS[ins.type]}
+                </span>
+                <span className="ml-auto">{timeAgo(ins.created_at)}</span>
+              </div>
             </Link>
           ))
         )}

@@ -22,7 +22,7 @@ export default async function MyWorkPage() {
 
   return (
     <AppShell>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <PageHeader title="My Work" />
         <div className="mt-6">
           <MyWorkView jobs={jobs ?? []} />

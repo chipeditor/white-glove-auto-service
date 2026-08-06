@@ -29,7 +29,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
   return (
     <AppShell>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <PageHeader
           breadcrumbs={[
             { label: 'Vehicles', href: '/vehicles' },

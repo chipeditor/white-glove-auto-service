@@ -11,31 +11,24 @@ export default async function VehiclesPage() {
 
   return (
     <AppShell>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <PageHeader
           title="Vehicles"
           subtitle={`${vehicles.length} vehicles in system`}
           actions={
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-wg-muted" />
-                <input
-                  type="text"
-                  placeholder="Search vehicles..."
-                  className="bg-wg-input border border-wg-border rounded-lg pl-9 pr-4 py-2 text-sm text-wg-text placeholder:text-wg-muted focus:outline-none focus:border-wg-blue/50 w-64"
-                />
-              </div>
+            <div className="flex items-center gap-2 sm:gap-3">
               <Link href="/intake/new">
                 <Button>
                   <Plus size={16} />
-                  New Vehicle
+                  <span className="hidden sm:inline">New Vehicle</span>
+                  <span className="sm:hidden">New</span>
                 </Button>
               </Link>
             </div>
           }
         />
 
-        <div className="flex gap-2 mt-6 mb-4">
+        <div className="flex gap-2 mt-4 sm:mt-6 mb-4 overflow-x-auto pb-1">
           {['All', 'In Service', 'Ready for Delivery', 'Awaiting Approval', 'Delivered'].map((filter) => (
             <button
               key={filter}

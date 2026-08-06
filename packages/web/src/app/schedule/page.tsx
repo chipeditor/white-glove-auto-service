@@ -39,7 +39,7 @@ export default async function SchedulePage() {
 
   return (
     <AppShell>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <ScheduleCalendar
           serviceRequests={(srs ?? []) as unknown as { id: string; title: string; status: string; estimated_completion: string | null; created_at: string; technician_id: string | null; vehicle: { year: number | null; make: string; model: string } | null; technician: { id: string; full_name: string } | null; customer: { full_name: string } | null }[]}
           technicians={techList}

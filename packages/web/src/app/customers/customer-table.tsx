@@ -55,7 +55,7 @@ export function CustomerTable({ customers }: Props) {
           placeholder="Search by name, email, or phone..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-md pl-9 pr-8 py-2 rounded-lg bg-wg-card border border-wg-border text-sm text-wg-text placeholder:text-wg-muted focus:outline-none focus:border-wg-blue/50 focus:ring-1 focus:ring-wg-blue/25 transition-colors"
+          className="w-full sm:max-w-md pl-9 pr-8 py-2 rounded-lg bg-wg-card border border-wg-border text-sm text-wg-text placeholder:text-wg-muted focus:outline-none focus:border-wg-blue/50 focus:ring-1 focus:ring-wg-blue/25 transition-colors"
         />
         {search && (
           <button
@@ -74,22 +74,14 @@ export function CustomerTable({ customers }: Props) {
         </p>
       )}
 
-      {/* Table */}
+      {/* Table / Cards */}
       <div className="bg-wg-card rounded-xl border border-wg-border overflow-hidden">
-        {/* Header */}
-        <div className="grid grid-cols-[1fr_1fr_auto_auto_auto] gap-4 px-4 py-3 border-b border-wg-border">
-          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">
-            Name
-          </span>
-          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">
-            Email
-          </span>
-          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider min-w-[130px]">
-            Phone
-          </span>
-          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider min-w-[140px]">
-            Location
-          </span>
+        {/* Desktop header */}
+        <div className="hidden md:grid grid-cols-[1fr_1fr_auto_auto_auto] gap-4 px-4 py-3 border-b border-wg-border">
+          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">Name</span>
+          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">Email</span>
+          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider min-w-[130px]">Phone</span>
+          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider min-w-[140px]">Location</span>
           <span className="text-xs font-medium text-wg-muted uppercase tracking-wider w-8" />
         </div>
 
@@ -106,31 +98,33 @@ export function CustomerTable({ customers }: Props) {
 
             return (
               <div key={customer.id} className="border-b border-wg-border last:border-b-0">
-                {/* Main row */}
+                {/* Desktop row */}
                 <button
-                  onClick={() =>
-                    setExpandedId(isExpanded ? null : customer.id)
-                  }
-                  className="w-full grid grid-cols-[1fr_1fr_auto_auto_auto] items-center gap-4 px-4 py-3 hover:bg-wg-card-hover transition-colors text-left"
+                  onClick={() => setExpandedId(isExpanded ? null : customer.id)}
+                  className="w-full hidden md:grid grid-cols-[1fr_1fr_auto_auto_auto] items-center gap-4 px-4 py-3 hover:bg-wg-card-hover transition-colors text-left"
                 >
-                  <span className="text-sm font-medium text-wg-text">
-                    {customer.full_name}
-                  </span>
-                  <span className="text-sm text-wg-text2 truncate">
-                    {customer.email ?? '—'}
-                  </span>
-                  <span className="text-sm text-wg-text2 min-w-[130px]">
-                    {customer.phone ? formatPhone(customer.phone) : '—'}
-                  </span>
-                  <span className="text-sm text-wg-text2 min-w-[140px]">
-                    {location || '—'}
-                  </span>
+                  <span className="text-sm font-medium text-wg-text">{customer.full_name}</span>
+                  <span className="text-sm text-wg-text2 truncate">{customer.email ?? '—'}</span>
+                  <span className="text-sm text-wg-text2 min-w-[130px]">{customer.phone ? formatPhone(customer.phone) : '—'}</span>
+                  <span className="text-sm text-wg-text2 min-w-[140px]">{location || '—'}</span>
                   <span className="w-8 flex justify-center text-wg-muted">
-                    {isExpanded ? (
-                      <ChevronUp size={16} />
-                    ) : (
-                      <ChevronDown size={16} />
-                    )}
+                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </span>
+                </button>
+
+                {/* Mobile row */}
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : customer.id)}
+                  className="w-full md:hidden flex items-center justify-between px-4 py-3 active:bg-wg-card-hover transition-colors text-left"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-wg-text truncate">{customer.full_name}</p>
+                    <p className="text-xs text-wg-muted truncate mt-0.5">
+                      {[customer.phone ? formatPhone(customer.phone) : null, customer.email].filter(Boolean).join(' · ') || '—'}
+                    </p>
+                  </div>
+                  <span className="text-wg-muted ml-2">
+                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   </span>
                 </button>
 

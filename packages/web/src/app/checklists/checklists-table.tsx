@@ -110,115 +110,92 @@ export function ChecklistsTable({ checklists }: Props) {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-wg-card rounded-xl border border-wg-border overflow-hidden">
+      {/* Desktop table */}
+      <div className="hidden md:block bg-wg-card rounded-xl border border-wg-border overflow-hidden">
         <div className="grid grid-cols-[1fr_1fr_auto_minmax(120px,1fr)_auto] gap-4 px-4 py-3 border-b border-wg-border">
-          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">
-            Checklist
-          </span>
-          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">
-            Vehicle
-          </span>
-          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">
-            Assigned To
-          </span>
-          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">
-            Progress
-          </span>
-          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider w-16 text-right">
-            Updated
-          </span>
+          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">Checklist</span>
+          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">Vehicle</span>
+          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">Assigned To</span>
+          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">Progress</span>
+          <span className="text-xs font-medium text-wg-muted uppercase tracking-wider w-16 text-right">Updated</span>
         </div>
 
         {filtered.length === 0 ? (
-          <div className="px-4 py-12 text-center text-sm text-wg-muted">
-            No checklists found.
-          </div>
+          <div className="px-4 py-12 text-center text-sm text-wg-muted">No checklists found.</div>
         ) : (
           filtered.map((cl) => {
             const pct = progressPercent(cl);
             const isComplete = getChecklistStatus(cl) === 'completed';
-            const href = cl.service_request_id
-              ? `/service-requests/${cl.service_request_id}`
-              : '#';
-
+            const href = cl.service_request_id ? `/service-requests/${cl.service_request_id}` : '#';
             return (
-              <Link
-                key={cl.id}
-                href={href}
-                className="grid grid-cols-[1fr_1fr_auto_minmax(120px,1fr)_auto] items-center gap-4 px-4 py-3 hover:bg-wg-card-hover transition-colors border-b border-wg-border last:border-b-0"
-              >
-                {/* Title + description */}
+              <Link key={cl.id} href={href} className="grid grid-cols-[1fr_1fr_auto_minmax(120px,1fr)_auto] items-center gap-4 px-4 py-3 hover:bg-wg-card-hover transition-colors border-b border-wg-border last:border-b-0">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <CheckSquare
-                      size={14}
-                      className={isComplete ? 'text-emerald-400' : 'text-wg-text2'}
-                    />
-                    <span className="text-sm font-medium text-wg-text truncate">
-                      {cl.title}
-                    </span>
+                    <CheckSquare size={14} className={isComplete ? 'text-emerald-400' : 'text-wg-text2'} />
+                    <span className="text-sm font-medium text-wg-text truncate">{cl.title}</span>
                   </div>
-                  {cl.description && (
-                    <p className="text-xs text-wg-muted truncate max-w-[240px] mt-0.5 ml-[22px]">
-                      {cl.description}
-                    </p>
-                  )}
-                  {cl.service_request && (
-                    <p className="text-[11px] text-wg-muted truncate max-w-[240px] mt-0.5 ml-[22px]">
-                      SR: {cl.service_request.title}
-                    </p>
-                  )}
+                  {cl.description && <p className="text-xs text-wg-muted truncate max-w-[240px] mt-0.5 ml-[22px]">{cl.description}</p>}
+                  {cl.service_request && <p className="text-[11px] text-wg-muted truncate max-w-[240px] mt-0.5 ml-[22px]">SR: {cl.service_request.title}</p>}
                 </div>
-
-                {/* Vehicle */}
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-7 h-7 rounded-md bg-wg-bg2 flex items-center justify-center flex-shrink-0">
-                    <Car size={14} className="text-wg-text2" />
-                  </div>
-                  <span className="text-sm text-wg-text2 truncate">
-                    {cl.vehicle
-                      ? `${cl.vehicle.year ?? ''} ${cl.vehicle.make} ${cl.vehicle.model}`.trim()
-                      : '—'}
-                  </span>
+                  <div className="w-7 h-7 rounded-md bg-wg-bg2 flex items-center justify-center flex-shrink-0"><Car size={14} className="text-wg-text2" /></div>
+                  <span className="text-sm text-wg-text2 truncate">{cl.vehicle ? `${cl.vehicle.year ?? ''} ${cl.vehicle.make} ${cl.vehicle.model}`.trim() : '—'}</span>
                 </div>
-
-                {/* Assigned to */}
                 <div className="flex items-center gap-2 min-w-[100px]">
                   <User size={12} className="text-wg-muted flex-shrink-0" />
-                  <span className="text-sm text-wg-text2 truncate">
-                    {cl.assigned_user?.full_name ?? '—'}
-                  </span>
+                  <span className="text-sm text-wg-text2 truncate">{cl.assigned_user?.full_name ?? '—'}</span>
                 </div>
-
-                {/* Progress */}
                 <div className="min-w-[120px]">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-wg-text2">
-                      {cl.completed_items}/{cl.total_items}
-                    </span>
-                    <span
-                      className={`text-xs font-medium ${
-                        isComplete ? 'text-emerald-400' : 'text-wg-muted'
-                      }`}
-                    >
-                      {pct}%
-                    </span>
+                    <span className="text-xs text-wg-text2">{cl.completed_items}/{cl.total_items}</span>
+                    <span className={`text-xs font-medium ${isComplete ? 'text-emerald-400' : 'text-wg-muted'}`}>{pct}%</span>
                   </div>
                   <div className="w-full h-1.5 bg-wg-bg2 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        isComplete ? 'bg-emerald-500' : 'bg-wg-blue'
-                      }`}
-                      style={{ width: `${pct}%` }}
-                    />
+                    <div className={`h-full rounded-full transition-all ${isComplete ? 'bg-emerald-500' : 'bg-wg-blue'}`} style={{ width: `${pct}%` }} />
                   </div>
                 </div>
+                <span className="text-xs text-wg-muted w-16 text-right">{timeAgo(cl.updated_at)}</span>
+              </Link>
+            );
+          })
+        )}
+      </div>
 
-                {/* Updated */}
-                <span className="text-xs text-wg-muted w-16 text-right">
-                  {timeAgo(cl.updated_at)}
-                </span>
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-2">
+        {filtered.length === 0 ? (
+          <div className="bg-wg-card rounded-xl border border-wg-border px-4 py-12 text-center text-sm text-wg-muted">No checklists found.</div>
+        ) : (
+          filtered.map((cl) => {
+            const pct = progressPercent(cl);
+            const isComplete = getChecklistStatus(cl) === 'completed';
+            const href = cl.service_request_id ? `/service-requests/${cl.service_request_id}` : '#';
+            return (
+              <Link key={cl.id} href={href} className="block bg-wg-card rounded-xl border border-wg-border p-3.5 active:bg-wg-card-hover transition-colors">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <CheckSquare size={14} className={isComplete ? 'text-emerald-400' : 'text-wg-text2'} />
+                      <span className="text-sm font-medium text-wg-text truncate">{cl.title}</span>
+                    </div>
+                    {cl.vehicle && (
+                      <p className="text-xs text-wg-muted mt-0.5 ml-[22px] truncate">
+                        {`${cl.vehicle.year ?? ''} ${cl.vehicle.make} ${cl.vehicle.model}`.trim()}
+                      </p>
+                    )}
+                  </div>
+                  <span className={`text-xs font-medium ${isComplete ? 'text-emerald-400' : 'text-wg-muted'}`}>{pct}%</span>
+                </div>
+                <div className="ml-[22px]">
+                  <div className="w-full h-1.5 bg-wg-bg2 rounded-full overflow-hidden mb-2">
+                    <div className={`h-full rounded-full ${isComplete ? 'bg-emerald-500' : 'bg-wg-blue'}`} style={{ width: `${pct}%` }} />
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-wg-muted">
+                    <span>{cl.completed_items}/{cl.total_items} items</span>
+                    {cl.assigned_user?.full_name && <span className="truncate">{cl.assigned_user.full_name}</span>}
+                    <span className="ml-auto">{timeAgo(cl.updated_at)}</span>
+                  </div>
+                </div>
               </Link>
             );
           })

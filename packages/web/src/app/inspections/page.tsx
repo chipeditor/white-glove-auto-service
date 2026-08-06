@@ -8,7 +8,7 @@ export default async function InspectionsPage() {
 
   return (
     <AppShell>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <PageHeader
           title="Inspections"
           subtitle={`${inspections.length} total inspections`}

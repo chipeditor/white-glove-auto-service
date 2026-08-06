@@ -41,7 +41,7 @@ export default async function ReportsPage() {
 
   return (
     <AppShell>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <PageHeader title="Reports" subtitle="Generate inspection and estimate reports" />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">

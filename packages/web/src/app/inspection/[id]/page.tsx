@@ -25,7 +25,7 @@ export default function InspectionPage({ params }: { params: Promise<{ id: strin
 
   return (
     <AppShell>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <PageHeader
           title="Intake Inspection"
           breadcrumbs={[

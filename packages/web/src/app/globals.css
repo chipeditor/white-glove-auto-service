@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 :root {
   --wg-bg-primary: #0d0d14;
   --wg-bg-secondary: #141422;

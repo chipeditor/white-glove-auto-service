@@ -4,7 +4,7 @@ import { Skeleton, StatCardSkeleton, TableRowSkeleton } from '@/components/ui/Sk
 export default function DashboardLoading() {
   return (
     <AppShell>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <Skeleton className="h-8 w-40 mb-2" />
         <Skeleton className="h-4 w-56 mb-6" />
 

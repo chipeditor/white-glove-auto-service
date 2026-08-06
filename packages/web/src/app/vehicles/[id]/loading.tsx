@@ -4,7 +4,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 export default function VehicleDetailLoading() {
   return (
     <AppShell>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <Skeleton className="h-4 w-48 mb-4" />
         <div className="flex gap-6 mt-4">
           <div className="flex-1 space-y-4">

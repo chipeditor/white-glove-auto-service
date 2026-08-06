@@ -11,7 +11,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
 
   return (
     <AppShell>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <PageHeader
           title="Report"
           breadcrumbs={[

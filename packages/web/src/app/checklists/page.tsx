@@ -10,7 +10,7 @@ export default async function ChecklistsPage() {
 
   return (
     <AppShell>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <PageHeader
           title="Checklists"
           subtitle={`${checklists.length} total checklists`}

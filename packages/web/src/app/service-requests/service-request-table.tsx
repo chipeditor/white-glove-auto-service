@@ -50,7 +50,7 @@ export function ServiceRequestTable({ serviceRequests }: Props) {
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 -mx-1 px-1">
         {STATUS_FILTERS.map((f) => {
           const count = f.value === 'all' ? serviceRequests.length : (statusCounts[f.value] || 0);
           const active = filter === f.value;
@@ -75,7 +75,8 @@ export function ServiceRequestTable({ serviceRequests }: Props) {
         })}
       </div>
 
-      <div className="bg-wg-card rounded-xl border border-wg-border overflow-hidden">
+      {/* Desktop table */}
+      <div className="hidden md:block bg-wg-card rounded-xl border border-wg-border overflow-hidden">
         <div className="grid grid-cols-[1fr_1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-3 border-b border-wg-border">
           <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">Request</span>
           <span className="text-xs font-medium text-wg-muted uppercase tracking-wider">Vehicle</span>
@@ -124,6 +125,54 @@ export function ServiceRequestTable({ serviceRequests }: Props) {
               <span className="text-xs text-wg-muted w-16 text-right">
                 {timeAgo(sr.updated_at)}
               </span>
+            </Link>
+          ))
+        )}
+      </div>
+
+      {/* Mobile card list */}
+      <div className="md:hidden space-y-2">
+        {filtered.length === 0 ? (
+          <div className="bg-wg-card rounded-xl border border-wg-border px-4 py-12 text-center text-sm text-wg-muted">
+            No service requests found.
+          </div>
+        ) : (
+          filtered.map((sr) => (
+            <Link
+              key={sr.id}
+              href={`/service-requests/${sr.id}`}
+              className="block bg-wg-card rounded-xl border border-wg-border p-3.5 active:bg-wg-card-hover transition-colors"
+            >
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-wg-text truncate">{sr.title}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <Car size={12} className="text-wg-muted shrink-0" />
+                    <span className="text-xs text-wg-text2 truncate">
+                      {sr.vehicle ? `${sr.vehicle.year ?? ''} ${sr.vehicle.make} ${sr.vehicle.model}`.trim() : '—'}
+                    </span>
+                  </div>
+                </div>
+                <StatusBadge status={sr.status} />
+              </div>
+              <div className="flex items-center gap-3 text-xs text-wg-muted">
+                {sr.customer?.full_name && (
+                  <span className="truncate">{sr.customer.full_name}</span>
+                )}
+                {sr.technician?.full_name && (
+                  <>
+                    <span className="text-wg-border">·</span>
+                    <span className="truncate">{sr.technician.full_name}</span>
+                  </>
+                )}
+                {sr.total ? (
+                  <>
+                    <span className="text-wg-border">·</span>
+                    <span className="font-medium text-wg-text2">{formatCurrency(sr.total)}</span>
+                  </>
+                ) : null}
+                <span className="ml-auto shrink-0">{timeAgo(sr.updated_at)}</span>
+              </div>
             </Link>
           ))
         )}

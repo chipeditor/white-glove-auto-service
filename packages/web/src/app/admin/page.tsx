@@ -6,7 +6,7 @@ import { Shield } from 'lucide-react';
 export default function AdminPage() {
   return (
     <AppShell>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <PageHeader title="Admin" subtitle="System administration" />
         <div className="mt-8">
           <EmptyState

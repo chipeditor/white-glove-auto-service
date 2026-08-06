@@ -11,7 +11,7 @@ export default async function ServiceRequestsPage() {
 
   return (
     <AppShell>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <PageHeader
           title="Service Requests"
           subtitle={`${serviceRequests.length} total requests`}

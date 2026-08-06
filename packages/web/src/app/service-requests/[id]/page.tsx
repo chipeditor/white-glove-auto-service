@@ -108,7 +108,7 @@ export default async function ServiceRequestDetailPage({
 
   return (
     <AppShell>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <PageHeader
           title={sr.title}
           breadcrumbs={[
@@ -120,8 +120,8 @@ export default async function ServiceRequestDetailPage({
 
         {/* Status Pipeline */}
         {!isDeclined && (
-          <div className="mt-6 bg-wg-card rounded-xl border border-wg-border p-4">
-            <div className="flex items-center justify-between">
+          <div className="mt-4 sm:mt-6 bg-wg-card rounded-xl border border-wg-border p-3 sm:p-4 overflow-x-auto">
+            <div className="flex items-center justify-between min-w-[500px]">
               {STATUS_PIPELINE.map((step, i) => {
                 const done = i <= currentIdx;
                 const active = i === currentIdx;
@@ -129,7 +129,7 @@ export default async function ServiceRequestDetailPage({
                   <div key={step} className="flex items-center flex-1 last:flex-none">
                     <div className="flex flex-col items-center">
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                        className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold ${
                           done
                             ? active
                               ? 'bg-wg-blue text-white'
@@ -140,7 +140,7 @@ export default async function ServiceRequestDetailPage({
                         {i + 1}
                       </div>
                       <span
-                        className={`text-[10px] mt-1 ${
+                        className={`text-[9px] sm:text-[10px] mt-1 ${
                           active ? 'text-wg-blue font-medium' : done ? 'text-wg-text2' : 'text-wg-muted'
                         }`}
                       >
@@ -149,7 +149,7 @@ export default async function ServiceRequestDetailPage({
                     </div>
                     {i < STATUS_PIPELINE.length - 1 && (
                       <div
-                        className={`flex-1 h-0.5 mx-2 mt-[-14px] ${
+                        className={`flex-1 h-0.5 mx-1 sm:mx-2 mt-[-14px] ${
                           i < currentIdx ? 'bg-wg-blue/30' : 'bg-wg-border'
                         }`}
                       />
@@ -167,7 +167,7 @@ export default async function ServiceRequestDetailPage({
           </div>
         )}
 
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="mt-4 sm:mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Description */}

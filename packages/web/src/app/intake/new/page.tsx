@@ -238,7 +238,7 @@ export default function NewIntakePage() {
 
   return (
     <AppShell>
-      <div className="p-8 max-w-2xl mx-auto">
+      <div className="p-4 sm:p-8 max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <Link href="/dashboard" className="p-2 text-wg-muted hover:text-wg-text transition-colors">

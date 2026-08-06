@@ -4,7 +4,7 @@ import { Skeleton, TableRowSkeleton } from '@/components/ui/Skeleton';
 export default function VehiclesLoading() {
   return (
     <AppShell>
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <Skeleton className="h-8 w-32 mb-2" />
         <Skeleton className="h-4 w-48 mb-6" />
 

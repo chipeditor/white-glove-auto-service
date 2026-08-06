@@ -113,25 +113,26 @@ export function ScheduleCalendar({ serviceRequests, technicians }: Props) {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div>
-          <h1 className="text-2xl font-semibold text-wg-text">Schedule</h1>
-          <p className="mt-1 text-sm text-wg-text2">Service requests by estimated completion</p>
+          <h1 className="text-xl sm:text-2xl font-semibold text-wg-text">Schedule</h1>
+          <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-wg-text2">Service requests by estimated completion</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Link
             href="/intake/new"
             className="flex items-center gap-1.5 px-3 py-2 bg-wg-blue text-white text-sm font-medium rounded-lg hover:bg-wg-blue/80 transition-colors"
           >
             <Plus size={16} />
-            New Intake
+            <span className="hidden sm:inline">New Intake</span>
+            <span className="sm:hidden">Intake</span>
           </Link>
           <select
             value={selectedTech ?? ''}
             onChange={(e) => setSelectedTech(e.target.value || null)}
-            className="px-3 py-2 bg-wg-card border border-wg-border rounded-lg text-sm text-wg-text"
+            className="px-2 sm:px-3 py-2 bg-wg-card border border-wg-border rounded-lg text-sm text-wg-text"
           >
-            <option value="">All Technicians</option>
+            <option value="">All Techs</option>
             {technicians.map((t) => (
               <option key={t.id} value={t.id}>{t.full_name}</option>
             ))}
@@ -139,13 +140,13 @@ export function ScheduleCalendar({ serviceRequests, technicians }: Props) {
           <div className="flex border border-wg-border rounded-lg overflow-hidden">
             <button
               onClick={() => setView('week')}
-              className={`px-3 py-2 text-sm ${view === 'week' ? 'bg-wg-blue text-white' : 'bg-wg-card text-wg-text2 hover:text-wg-text'}`}
+              className={`px-2.5 sm:px-3 py-2 text-sm ${view === 'week' ? 'bg-wg-blue text-white' : 'bg-wg-card text-wg-text2 hover:text-wg-text'}`}
             >
               Week
             </button>
             <button
               onClick={() => setView('day')}
-              className={`px-3 py-2 text-sm ${view === 'day' ? 'bg-wg-blue text-white' : 'bg-wg-card text-wg-text2 hover:text-wg-text'}`}
+              className={`px-2.5 sm:px-3 py-2 text-sm ${view === 'day' ? 'bg-wg-blue text-white' : 'bg-wg-card text-wg-text2 hover:text-wg-text'}`}
             >
               Day
             </button>
@@ -169,7 +170,7 @@ export function ScheduleCalendar({ serviceRequests, technicians }: Props) {
 
       {view === 'week' ? (
         /* Week View */
-        <div className="grid grid-cols-7 gap-px bg-wg-border rounded-xl overflow-hidden">
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0"><div className="grid grid-cols-7 gap-px bg-wg-border rounded-xl overflow-hidden min-w-[640px]">
           {weekDays.map((day, i) => {
             const daySrs = getSrsForDay(day);
             const isToday = isSameDay(day, today);
@@ -206,7 +207,7 @@ export function ScheduleCalendar({ serviceRequests, technicians }: Props) {
               </div>
             );
           })}
-        </div>
+        </div></div>
       ) : (
         /* Day View */
         <div className="bg-wg-card border border-wg-border rounded-xl overflow-hidden">

@@ -10,7 +10,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-wg-bg">
       {/* Mobile header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-wg-bg2 border-b border-wg-border flex items-center px-4 z-50">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-wg-bg2 border-b border-wg-border flex items-center px-4 z-50" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <button
           onClick={() => setSidebarOpen(true)}
           className="p-2 -ml-2 text-wg-text2 hover:text-wg-text"
