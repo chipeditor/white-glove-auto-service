@@ -16,7 +16,9 @@ import type {
   Notification,
   AffiliateRecommendation,
   User,
+  AuditAction,
 } from '@/shared/types';
+import type { UploadedFile } from '@/components/ui/FileUpload';
 
 async function getOrgId() {
   const supabase = await createServerSupabaseClient();
@@ -463,4 +465,163 @@ export async function fetchAffiliateRecommendations(
     .eq('is_active', true);
 
   return (data ?? []) as AffiliateRecommendation[];
+}
+
+// ===========================================
+// Vehicle detail tabs
+// ===========================================
+
+/// An inspection plus the two things the vehicle detail list needs that do not
+/// live on the row itself: who ran it, and how far through the items it got.
+export interface VehicleInspectionSummary extends Inspection {
+  inspector: { full_name: string } | null;
+  service_request: { id: string; title: string } | null;
+  checked_items: number;
+  total_items: number;
+}
+
+export async function fetchVehicleInspections(
+  vehicleId: string
+): Promise<VehicleInspectionSummary[]> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data: inspections } = await supabase
+    .from('inspections')
+    .select(
+      '*, inspector:users!inspections_inspector_id_fkey(full_name), service_request:service_requests(id, title)'
+    )
+    .eq('vehicle_id', vehicleId)
+    .order('created_at', { ascending: false });
+
+  const rows = (inspections ?? []) as (Inspection & {
+    inspector: { full_name: string } | null;
+    service_request: { id: string; title: string } | null;
+  })[];
+
+  if (rows.length === 0) return [];
+
+  // inspection_items hang off sections, so progress has to come through them.
+  const { data: sections } = await supabase
+    .from('inspection_sections')
+    .select('inspection_id, items:inspection_items(passed)')
+    .in(
+      'inspection_id',
+      rows.map((r) => r.id)
+    );
+
+  const progress: Record<string, { checked: number; total: number }> = {};
+  for (const section of (sections ?? []) as {
+    inspection_id: string;
+    items: { passed: boolean | null }[] | null;
+  }[]) {
+    const bucket = (progress[section.inspection_id] ??= { checked: 0, total: 0 });
+    for (const item of section.items ?? []) {
+      bucket.total += 1;
+      if (item.passed !== null) bucket.checked += 1;
+    }
+  }
+
+  return rows.map((row) => ({
+    ...row,
+    checked_items: progress[row.id]?.checked ?? 0,
+    total_items: progress[row.id]?.total ?? 0,
+  }));
+}
+
+export interface VehicleServiceRequestSummary extends ServiceRequest {
+  technician: { full_name: string } | null;
+  advisor: { full_name: string } | null;
+}
+
+export async function fetchVehicleServiceRequests(
+  vehicleId: string
+): Promise<VehicleServiceRequestSummary[]> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data } = await supabase
+    .from('service_requests')
+    .select(
+      '*, technician:users!service_requests_technician_id_fkey(full_name), advisor:users!service_requests_advisor_id_fkey(full_name)'
+    )
+    .eq('vehicle_id', vehicleId)
+    .order('created_at', { ascending: false });
+
+  return (data ?? []) as VehicleServiceRequestSummary[];
+}
+
+export async function fetchVehicleMedia(vehicleId: string): Promise<UploadedFile[]> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data } = await supabase
+    .from('media_assets')
+    .select('id, url, file_name, file_size, mime_type, type, caption, created_at')
+    .eq('vehicle_id', vehicleId)
+    .order('created_at', { ascending: false });
+
+  // file_name/file_size/mime_type are nullable in the schema but FileUpload
+  // renders them unconditionally, so fill the gaps here rather than there.
+  return ((data ?? []) as Record<string, unknown>[]).map((row) => ({
+    id: row.id as string,
+    url: row.url as string,
+    file_name: (row.file_name as string | null) ?? 'Untitled file',
+    file_size: (row.file_size as number | null) ?? 0,
+    mime_type: (row.mime_type as string | null) ?? 'application/octet-stream',
+    type: row.type as string,
+    caption: (row.caption as string | null) ?? null,
+    created_at: row.created_at as string,
+  }));
+}
+
+export interface VehicleHistoryEvent {
+  id: string;
+  action: AuditAction;
+  entity_type: string;
+  entity_id: string;
+  actor_id: string | null;
+  actor_name?: string;
+  changes: Record<string, unknown> | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
+/// Audit trail for a vehicle: events logged against the vehicle itself plus
+/// those against its service requests and inspections, which is where most of
+/// the interesting activity actually lands.
+export async function fetchVehicleHistory(vehicleId: string): Promise<VehicleHistoryEvent[]> {
+  const supabase = await createServerSupabaseClient();
+
+  const [srRes, inspRes] = await Promise.all([
+    supabase.from('service_requests').select('id').eq('vehicle_id', vehicleId),
+    supabase.from('inspections').select('id').eq('vehicle_id', vehicleId),
+  ]);
+
+  const entityIds = [
+    vehicleId,
+    ...((srRes.data ?? []) as { id: string }[]).map((r) => r.id),
+    ...((inspRes.data ?? []) as { id: string }[]).map((r) => r.id),
+  ];
+
+  const { data: events } = await supabase
+    .from('audit_events')
+    .select('id, action, entity_type, entity_id, actor_id, changes, metadata, created_at')
+    .in('entity_id', entityIds)
+    .order('created_at', { ascending: false })
+    .limit(100);
+
+  const rows = (events ?? []) as VehicleHistoryEvent[];
+  if (rows.length === 0) return [];
+
+  const actorIds = [...new Set(rows.map((e) => e.actor_id).filter(Boolean))] as string[];
+  let actorMap: Record<string, string> = {};
+  if (actorIds.length > 0) {
+    const { data: users } = await supabase.from('users').select('id, full_name').in('id', actorIds);
+    actorMap = Object.fromEntries(
+      ((users ?? []) as { id: string; full_name: string }[]).map((u) => [u.id, u.full_name])
+    );
+  }
+
+  return rows.map((e) => ({
+    ...e,
+    actor_name: e.actor_id ? actorMap[e.actor_id] : undefined,
+  }));
 }

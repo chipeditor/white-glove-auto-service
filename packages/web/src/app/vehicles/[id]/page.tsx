@@ -4,10 +4,12 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import {
   fetchVehicle,
-  fetchInspections,
   fetchChecklists,
   fetchAffiliateRecommendations,
-  fetchServiceRequests,
+  fetchVehicleInspections,
+  fetchVehicleServiceRequests,
+  fetchVehicleMedia,
+  fetchVehicleHistory,
 } from '@/lib/queries';
 import { ChevronDown } from 'lucide-react';
 import { VehicleDetailTabs } from './vehicle-detail-tabs';
@@ -18,14 +20,14 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
   if (!vehicle) notFound();
 
-  const [inspections, checklists, affiliates, serviceRequests] = await Promise.all([
-    fetchInspections(id),
+  const [inspections, checklists, affiliates, serviceRequests, files, history] = await Promise.all([
+    fetchVehicleInspections(id),
     fetchChecklists(id),
     fetchAffiliateRecommendations(id),
-    fetchServiceRequests(),
+    fetchVehicleServiceRequests(id),
+    fetchVehicleMedia(id),
+    fetchVehicleHistory(id),
   ]);
-
-  const vehicleServiceRequests = serviceRequests.filter((sr) => sr.vehicle_id === id);
 
   return (
     <AppShell>
@@ -48,7 +50,9 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
           inspections={inspections}
           checklists={checklists}
           affiliates={affiliates}
-          serviceRequests={vehicleServiceRequests}
+          serviceRequests={serviceRequests}
+          files={files}
+          history={history}
         />
       </div>
     </AppShell>
