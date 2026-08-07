@@ -283,6 +283,46 @@ export async function fetchInspections(vehicleId: string): Promise<Inspection[]>
   return (data ?? []) as Inspection[];
 }
 
+export interface InspectionDetail extends Inspection {
+  vehicle: (Vehicle & { customer: Customer | null }) | null;
+  service_request: { id: string; title: string } | null;
+  inspector: { full_name: string } | null;
+}
+
+export async function fetchInspection(id: string): Promise<InspectionDetail | null> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data } = await supabase
+    .from('inspections')
+    .select(
+      '*, vehicle:vehicles(*, customer:customers(*)), service_request:service_requests(id, title), inspector:users!inspections_inspector_id_fkey(full_name)'
+    )
+    .eq('id', id)
+    .single();
+
+  return (data as InspectionDetail) ?? null;
+}
+
+export interface DamageMarkerRow {
+  id: string;
+  x_position: number | null;
+  y_position: number | null;
+  severity: 'minor' | 'moderate' | 'severe';
+  description: string | null;
+}
+
+export async function fetchDamageMarkers(inspectionId: string): Promise<DamageMarkerRow[]> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data } = await supabase
+    .from('damage_markers')
+    .select('id, x_position, y_position, severity, description')
+    .eq('inspection_id', inspectionId)
+    .order('created_at');
+
+  return (data ?? []) as DamageMarkerRow[];
+}
+
 export async function fetchInspectionSections(
   inspectionId: string
 ): Promise<(InspectionSection & { items: InspectionItem[] })[]> {

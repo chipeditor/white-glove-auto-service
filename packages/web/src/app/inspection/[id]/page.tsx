@@ -1,100 +1,83 @@
-'use client';
-
-import { use, useState } from 'react';
+import { notFound } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { InspectionSectionCard } from '@/components/inspection/InspectionSectionCard';
-import { DamageMarker } from '@/components/ui/DamageMarker';
-import { FileUpload } from '@/components/ui/FileUpload';
-import { MOCK_INSPECTION_SECTIONS, MOCK_MECHANICAL_ITEMS } from '@/lib/mock-data';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import {
+  fetchInspection,
+  fetchInspectionSections,
+  fetchDamageMarkers,
+} from '@/lib/queries';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
+import type { UploadedFile } from '@/components/ui/FileUpload';
+import { InspectionWorkspace } from './inspection-workspace';
 
-const SECTION_TABS = ['Damage Map', 'Photos', 'Exterior', 'Interior', 'Engine Bay', 'Wheels', 'Glass'];
+const TYPE_LABELS: Record<string, string> = {
+  intake: 'Intake Inspection',
+  mechanical: 'Mechanical Inspection',
+  cosmetic: 'Cosmetic Inspection',
+  delivery: 'Delivery Inspection',
+  quality_control: 'Quality Control',
+  spot_check: 'Spot Check',
+};
 
-interface DamagePoint {
-  id: string;
-  x: number;
-  y: number;
-  severity: 'minor' | 'moderate' | 'severe';
-  note: string;
-}
+export default async function InspectionPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
 
-export default function InspectionPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const [activeTab, setActiveTab] = useState('Damage Map');
-  const [damageMarkers, setDamageMarkers] = useState<DamagePoint[]>([]);
+  const inspection = await fetchInspection(id);
+  if (!inspection) notFound();
+
+  const [sections, markers] = await Promise.all([
+    fetchInspectionSections(id),
+    fetchDamageMarkers(id),
+  ]);
+
+  const vehicle = inspection.vehicle;
+  const vehicleName = vehicle
+    ? `${vehicle.year ?? ''} ${vehicle.make} ${vehicle.model}`.trim()
+    : 'Vehicle';
+
+  const supabase = await createServerSupabaseClient();
+  const { data: mediaAssets } = vehicle
+    ? await supabase
+        .from('media_assets')
+        .select('*')
+        .eq('vehicle_id', vehicle.id)
+        .order('created_at', { ascending: false })
+    : { data: [] };
 
   return (
     <AppShell>
       <div className="p-4 sm:p-8">
         <PageHeader
-          title="Intake Inspection"
+          title={TYPE_LABELS[inspection.type] ?? 'Inspection'}
+          subtitle={
+            inspection.inspector?.full_name
+              ? `Inspector: ${inspection.inspector.full_name}`
+              : undefined
+          }
           breadcrumbs={[
-            { label: 'Vehicles', href: '/vehicles' },
-            { label: '2015 Chevrolet Corvette Z51', href: `/vehicles/${id}` },
-            { label: 'Intake Inspection' },
+            { label: 'Inspections', href: '/inspections' },
+            ...(vehicle
+              ? [{ label: vehicleName, href: `/vehicles/${vehicle.id}` }]
+              : []),
+            { label: TYPE_LABELS[inspection.type] ?? 'Inspection' },
           ]}
+          actions={<StatusBadge status={inspection.status} />}
         />
 
-        <div className="flex gap-2 mt-6 mb-6">
-          {SECTION_TABS.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === tab
-                  ? 'bg-wg-blue/10 text-wg-blue'
-                  : 'text-wg-text2 hover:bg-wg-card border border-wg-border'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
-        {activeTab === 'Damage Map' ? (
-          <div className="max-w-2xl">
-            <div className="bg-wg-card rounded-xl border border-wg-border p-5">
-              <h3 className="text-sm font-medium text-wg-text mb-4">Vehicle Damage Diagram</h3>
-              <DamageMarker
-                vehicleType="sedan"
-                markers={damageMarkers}
-                onChange={setDamageMarkers}
-              />
-            </div>
-          </div>
-        ) : activeTab === 'Photos' ? (
-          <div className="max-w-3xl">
-            <div className="bg-wg-card rounded-xl border border-wg-border p-5">
-              <h3 className="text-sm font-medium text-wg-text mb-4">Inspection Photos</h3>
-              <FileUpload
-                vehicleId={id}
-                organizationId="a0000000-0000-0000-0000-000000000001"
-                inspectionId={id}
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-6">
-            {MOCK_INSPECTION_SECTIONS.map((section) => (
-              <InspectionSectionCard
-                key={section.id}
-                name={section.name}
-                items={section.items}
-                completedCount={section.items.filter((i) => i.passed !== null).length}
-                totalCount={section.items.length}
-              />
-            ))}
-            {MOCK_MECHANICAL_ITEMS.map((group) => (
-              <InspectionSectionCard
-                key={group.category}
-                name={group.category}
-                items={group.items}
-                completedCount={group.items.filter((i) => i.passed !== null).length}
-                totalCount={group.items.length}
-              />
-            ))}
-          </div>
-        )}
+        <InspectionWorkspace
+          inspectionId={id}
+          vehicleId={vehicle?.id ?? null}
+          organizationId={inspection.organization_id}
+          sections={sections}
+          markers={markers}
+          mediaAssets={(mediaAssets ?? []) as UploadedFile[]}
+          status={inspection.status}
+        />
       </div>
     </AppShell>
   );

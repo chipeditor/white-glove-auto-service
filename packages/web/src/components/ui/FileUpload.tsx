@@ -3,7 +3,9 @@
 import { useState, useRef, useCallback } from 'react';
 import { Upload, X, Image, FileText, Film, Trash2, Loader2 } from 'lucide-react';
 
-interface MediaAsset {
+/// The subset of media_assets this component actually renders. Exported so
+/// callers can type their query results against it instead of re-declaring.
+export interface UploadedFile {
   id: string;
   url: string;
   file_name: string;
@@ -13,6 +15,8 @@ interface MediaAsset {
   caption: string | null;
   created_at: string;
 }
+
+type MediaAsset = UploadedFile;
 
 interface FileUploadProps {
   vehicleId: string;
